@@ -3,44 +3,44 @@ import { EXEMPLOS } from "../lib/examples";
 import { usePreviewFuncao, usePreviewS0 } from "../hooks/usePreviews.ts";
 
 interface FormularioLgrProps {
-  exId: string;
-  onPickEx: (id: string) => void;
-  nG: string;
-  setNG: (v: string) => void;
-  dG: string;
-  setDG: (v: string) => void;
-  nH: string;
-  setNH: (v: string) => void;
-  dH: string;
-  setDH: (v: string) => void;
-  sr: string;
-  setSr: (v: string) => void;
-  si: string;
-  setSi: (v: string) => void;
-  temErro: boolean;
+  exemploId: string;
+  aoSelecionarExemplo: (id: string) => void;
+  numeradorG: string;
+  setNumeradorG: (v: string) => void;
+  denominadorG: string;
+  setDenominadorG: (v: string) => void;
+  numeradorH: string;
+  setNumeradorH: (v: string) => void;
+  denominadorH: string;
+  setDenominadorH: (v: string) => void;
+  parteRealS0: string;
+  setParteRealS0: (v: string) => void;
+  parteImaginariaS0: string;
+  setParteImaginariaS0: (v: string) => void;
+  temErroCoeficientes: boolean;
 }
 
 export default function FormularioLgr(props: FormularioLgrProps) {
   const {
-    exId,
-    onPickEx,
-    nG,
-    setNG,
-    dG,
-    setDG,
-    nH,
-    setNH,
-    dH,
-    setDH,
-    sr,
-    setSr,
-    si,
-    setSi,
-    temErro,
+    exemploId,
+    aoSelecionarExemplo,
+    numeradorG,
+    setNumeradorG,
+    denominadorG,
+    setDenominadorG,
+    numeradorH,
+    setNumeradorH,
+    denominadorH,
+    setDenominadorH,
+    parteRealS0,
+    setParteRealS0,
+    parteImaginariaS0,
+    setParteImaginariaS0,
+    temErroCoeficientes,
   } = props;
-  const latexG = usePreviewFuncao(nG, dG, "G");
-  const latexH = usePreviewFuncao(nH, dH, "H");
-  const previewS0 = usePreviewS0(sr, si);
+  const latexG = usePreviewFuncao(numeradorG, denominadorG, "G");
+  const latexH = usePreviewFuncao(numeradorH, denominadorH, "H");
+  const previewS0 = usePreviewS0(parteRealS0, parteImaginariaS0);
   const descrito = "erro-coefs ajuda-coefs";
 
   return (
@@ -48,8 +48,8 @@ export default function FormularioLgr(props: FormularioLgrProps) {
       <label htmlFor="exemplo">Exemplo da lista</label>
       <select
         id="exemplo"
-        value={exId}
-        onChange={(e) => onPickEx(e.target.value)}
+        value={exemploId}
+        onChange={(e) => aoSelecionarExemplo(e.target.value)}
       >
         {EXEMPLOS.map((e) => (
           <option key={e.id} value={e.id}>
@@ -65,11 +65,11 @@ export default function FormularioLgr(props: FormularioLgrProps) {
             <label htmlFor="num-g">Numerador G(s)</label>
             <input
               id="num-g"
-              value={nG}
-              onChange={(e) => setNG(e.target.value)}
+              value={numeradorG}
+              onChange={(e) => setNumeradorG(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErro}
+              aria-invalid={temErroCoeficientes}
               aria-describedby={descrito}
             />
           </div>
@@ -77,11 +77,11 @@ export default function FormularioLgr(props: FormularioLgrProps) {
             <label htmlFor="den-g">Denominador G(s)</label>
             <input
               id="den-g"
-              value={dG}
-              onChange={(e) => setDG(e.target.value)}
+              value={denominadorG}
+              onChange={(e) => setDenominadorG(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErro}
+              aria-invalid={temErroCoeficientes}
               aria-describedby={descrito}
             />
           </div>
@@ -93,11 +93,11 @@ export default function FormularioLgr(props: FormularioLgrProps) {
             <label htmlFor="num-h">Numerador H(s)</label>
             <input
               id="num-h"
-              value={nH}
-              onChange={(e) => setNH(e.target.value)}
+              value={numeradorH}
+              onChange={(e) => setNumeradorH(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErro}
+              aria-invalid={temErroCoeficientes}
               aria-describedby={descrito}
             />
           </div>
@@ -105,11 +105,11 @@ export default function FormularioLgr(props: FormularioLgrProps) {
             <label htmlFor="den-h">Denominador H(s)</label>
             <input
               id="den-h"
-              value={dH}
-              onChange={(e) => setDH(e.target.value)}
+              value={denominadorH}
+              onChange={(e) => setDenominadorH(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErro}
+              aria-invalid={temErroCoeficientes}
               aria-describedby={descrito}
             />
           </div>
@@ -126,11 +126,11 @@ export default function FormularioLgr(props: FormularioLgrProps) {
             <label htmlFor="re-s0">Teste Re(s0)</label>
             <input
               id="re-s0"
-              value={sr}
-              onChange={(e) => setSr(e.target.value)}
+              value={parteRealS0}
+              onChange={(e) => setParteRealS0(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErro}
+              aria-invalid={temErroCoeficientes}
               aria-describedby={descrito}
             />
           </div>
@@ -138,11 +138,11 @@ export default function FormularioLgr(props: FormularioLgrProps) {
             <label htmlFor="im-s0">Teste Im(s0)</label>
             <input
               id="im-s0"
-              value={si}
-              onChange={(e) => setSi(e.target.value)}
+              value={parteImaginariaS0}
+              onChange={(e) => setParteImaginariaS0(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErro}
+              aria-invalid={temErroCoeficientes}
               aria-describedby={descrito}
             />
           </div>

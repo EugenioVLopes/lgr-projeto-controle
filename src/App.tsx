@@ -17,14 +17,19 @@ import { EXEMPLOS } from "./lib/examples";
 import { useCalculoLgr } from "./hooks/useCalculoLgr.ts";
 
 export default function App() {
-  const exemploInicial = EXEMPLOS.find((e) => e.id === "q1") ?? EXEMPLOS[0];
-  const [exId, setExId] = useState(exemploInicial.id);
-  const [nG, setNG] = useState(exemploInicial.nG);
-  const [dG, setDG] = useState(exemploInicial.dG);
-  const [nH, setNH] = useState(exemploInicial.nH);
-  const [dH, setDH] = useState(exemploInicial.dH);
-  const [sr, setSr] = useState(String(exemploInicial.sr));
-  const [si, setSi] = useState(String(exemploInicial.si));
+  const exemploInicial =
+    EXEMPLOS.find((exemplo) => exemplo.id === "q1") ?? EXEMPLOS[0];
+  const [exemploId, setExemploId] = useState(exemploInicial.id);
+  const [numeradorG, setNumeradorG] = useState(exemploInicial.numeradorG);
+  const [denominadorG, setDenominadorG] = useState(exemploInicial.denominadorG);
+  const [numeradorH, setNumeradorH] = useState(exemploInicial.numeradorH);
+  const [denominadorH, setDenominadorH] = useState(exemploInicial.denominadorH);
+  const [parteRealS0, setParteRealS0] = useState(
+    String(exemploInicial.parteRealS0),
+  );
+  const [parteImaginariaS0, setParteImaginariaS0] = useState(
+    String(exemploInicial.parteImaginariaS0),
+  );
   const [tema, setTema] = useState<"light" | "dark">("light");
   const corPolo = tema === "dark" ? "#f87171" : "#dc2626";
   const corZero = tema === "dark" ? "#4ade80" : "#16a34a";
@@ -33,27 +38,38 @@ export default function App() {
     document.documentElement.dataset.theme = tema;
   }, [tema]);
 
-  function pickEx(id: string): void {
-    const e = EXEMPLOS.find((x) => x.id === id) ?? EXEMPLOS[0];
-    setExId(e.id);
-    setNG(e.nG);
-    setDG(e.dG);
-    setNH(e.nH);
-    setDH(e.dH);
-    setSr(String(e.sr));
-    setSi(String(e.si));
+  function selecionarExemplo(id: string): void {
+    const exemploSelecionado =
+      EXEMPLOS.find((candidato) => candidato.id === id) ?? EXEMPLOS[0];
+    setExemploId(exemploSelecionado.id);
+    setNumeradorG(exemploSelecionado.numeradorG);
+    setDenominadorG(exemploSelecionado.denominadorG);
+    setNumeradorH(exemploSelecionado.numeradorH);
+    setDenominadorH(exemploSelecionado.denominadorH);
+    setParteRealS0(String(exemploSelecionado.parteRealS0));
+    setParteImaginariaS0(String(exemploSelecionado.parteImaginariaS0));
   }
 
-  const calc = useCalculoLgr(nG, dG, nH, dH, sr, si);
-  const temErro = calc.error !== null;
+  const calculoLgr = useCalculoLgr(
+    numeradorG,
+    denominadorG,
+    numeradorH,
+    denominadorH,
+    parteRealS0,
+    parteImaginariaS0,
+  );
+  const temErroCoeficientes = calculoLgr.error !== null;
 
   return (
     <>
       <header>
         <div className="header-row">
           <div>
-            <h1>LGR 12 passos</h1>
-            <p>DCA-3701 UFRN</p>
+            <h1>LGR</h1>
+            <p>
+              DCA3701.0 - PROJETO DE SISTEMAS DE CONTROLE - TEORIA - T01
+              (2026.2) UFRN
+            </p>
           </div>
           <button
             type="button"
@@ -68,82 +84,89 @@ export default function App() {
       </header>
       <main>
         <FormularioLgr
-          exId={exId}
-          onPickEx={pickEx}
-          nG={nG}
-          setNG={setNG}
-          dG={dG}
-          setDG={setDG}
-          nH={nH}
-          setNH={setNH}
-          dH={dH}
-          setDH={setDH}
-          sr={sr}
-          setSr={setSr}
-          si={si}
-          setSi={setSi}
-          temErro={temErro}
+          exemploId={exemploId}
+          aoSelecionarExemplo={selecionarExemplo}
+          numeradorG={numeradorG}
+          setNumeradorG={setNumeradorG}
+          denominadorG={denominadorG}
+          setDenominadorG={setDenominadorG}
+          numeradorH={numeradorH}
+          setNumeradorH={setNumeradorH}
+          denominadorH={denominadorH}
+          setDenominadorH={setDenominadorH}
+          parteRealS0={parteRealS0}
+          setParteRealS0={setParteRealS0}
+          parteImaginariaS0={parteImaginariaS0}
+          setParteImaginariaS0={setParteImaginariaS0}
+          temErroCoeficientes={temErroCoeficientes}
         />
-        {temErro ? (
+        {temErroCoeficientes ? (
           <div id="erro-coefs" className="card badge-warn" role="alert">
-            {calc.error}
+            {calculoLgr.error}
           </div>
         ) : (
           <>
-            <Passo01Equacao num={calc.num} den={calc.den} />
-            <Passo02FormaFatorada num={calc.num} den={calc.den} />
+            <Passo01Equacao num={calculoLgr.num} den={calculoLgr.den} />
+            <Passo02FormaFatorada num={calculoLgr.num} den={calculoLgr.den} />
             <Passo03PolosZeros
-              polos={calc.polos}
-              zeros={calc.zeros}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
               tema={tema}
               corPolo={corPolo}
               corZero={corZero}
             />
             <Passo04Segmentos
-              polos={calc.polos}
-              zeros={calc.zeros}
-              segs={calc.segs}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
+              segs={calculoLgr.segs}
             />
-            <Passo05Lugares np={calc.polos.length} nz={calc.zeros.length} />
+            <Passo05Lugares
+              np={calculoLgr.polos.length}
+              nz={calculoLgr.zeros.length}
+            />
             <Passo06Simetria />
             <Passo07Assintotas
-              polos={calc.polos}
-              zeros={calc.zeros}
-              sigma={calc.sigma}
-              angs={calc.angs}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
+              sigma={calculoLgr.sigma}
+              angs={calculoLgr.angs}
               tema={tema}
               corPolo={corPolo}
             />
-            <Passo08Breakaway num={calc.num} den={calc.den} bk={calc.bk} />
+            <Passo08Breakaway
+              num={calculoLgr.num}
+              den={calculoLgr.den}
+              bk={calculoLgr.bk}
+            />
             <Passo09Cruzamento
-              info={calc.info}
-              cruzs={calc.cruzs}
-              routh0={calc.routh0}
+              info={calculoLgr.info}
+              cruzs={calculoLgr.cruzs}
+              routh0={calculoLgr.routh0}
             />
             <Passo10Partida
-              partidas={calc.partidas}
-              polos={calc.polos}
-              zeros={calc.zeros}
+              partidas={calculoLgr.partidas}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
             />
             <Passo11AnguloS0
-              s0={calc.s0}
-              t={calc.t}
-              polos={calc.polos}
-              zeros={calc.zeros}
+              s0={calculoLgr.s0}
+              t={calculoLgr.t}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
               tema={tema}
               corPolo={corPolo}
               corZero={corZero}
             />
             <Passo12GanhoS0
-              s0={calc.s0}
-              K={calc.K}
-              polos={calc.polos}
-              zeros={calc.zeros}
+              s0={calculoLgr.s0}
+              K={calculoLgr.K}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
             />
             <LgrCompleto
-              polos={calc.polos}
-              ramos={calc.ramos}
-              Ks={calc.Ks}
+              polos={calculoLgr.polos}
+              ramos={calculoLgr.ramos}
+              Ks={calculoLgr.Ks}
               tema={tema}
               corPolo={corPolo}
             />

@@ -46,28 +46,42 @@ export type CalcOk = {
 export type Calc = CalcErro | CalcOk;
 
 export function useCalculoLgr(
-  nG: string,
-  dG: string,
-  nH: string,
-  dH: string,
-  sr: string,
-  si: string,
+  numeradorG: string,
+  denominadorG: string,
+  numeradorH: string,
+  denominadorH: string,
+  parteRealS0: string,
+  parteImaginariaS0: string,
 ): Calc {
-  const nGd = useValorComDebounce(nG);
-  const dGd = useValorComDebounce(dG);
-  const nHd = useValorComDebounce(nH);
-  const dHd = useValorComDebounce(dH);
-  const srd = useValorComDebounce(sr);
-  const sid = useValorComDebounce(si);
+  const numeradorGComDebounce = useValorComDebounce(numeradorG);
+  const denominadorGComDebounce = useValorComDebounce(denominadorG);
+  const numeradorHComDebounce = useValorComDebounce(numeradorH);
+  const denominadorHComDebounce = useValorComDebounce(denominadorH);
+  const parteRealS0ComDebounce = useValorComDebounce(parteRealS0);
+  const parteImaginariaS0ComDebounce = useValorComDebounce(parteImaginariaS0);
 
   return useMemo<Calc>(() => {
-    const pNG = analisarCoeficientes(nGd);
-    const pDG = analisarCoeficientes(dGd);
-    const pNH = analisarCoeficientes(nHd);
-    const pDH = analisarCoeficientes(dHd);
-    if (!pNG || !pDG || !pNH || !pDH)
+    const coeficientesNumeradorG = analisarCoeficientes(numeradorGComDebounce);
+    const coeficientesDenominadorG = analisarCoeficientes(
+      denominadorGComDebounce,
+    );
+    const coeficientesNumeradorH = analisarCoeficientes(numeradorHComDebounce);
+    const coeficientesDenominadorH = analisarCoeficientes(
+      denominadorHComDebounce,
+    );
+    if (
+      !coeficientesNumeradorG ||
+      !coeficientesDenominadorG ||
+      !coeficientesNumeradorH ||
+      !coeficientesDenominadorH
+    )
       return { error: 'Confere os coeficientes (use espaços: ex. "1 4 0")' };
-    const { num, den } = combinarMalhaAberta(pNG, pDG, pNH, pDH);
+    const { num, den } = combinarMalhaAberta(
+      coeficientesNumeradorG,
+      coeficientesDenominadorG,
+      coeficientesNumeradorH,
+      coeficientesDenominadorH,
+    );
     const zeros = encontrarRaizes(num);
     const polos = encontrarRaizes(den);
     const segs = encontrarSegmentosEixoReal(zeros, polos);
@@ -75,7 +89,10 @@ export function useCalculoLgr(
     const bk = encontrarPontosBreakaway(num, den, polos, zeros);
     const { cruzs, info } = encontrarCruzamentosEixoImaginario(den, num);
     const { Ks, ramos } = calcularRamosLgr(num, den);
-    const s0 = criarComplexo(Number(srd) || 0, Number(sid) || 0);
+    const s0 = criarComplexo(
+      Number(parteRealS0ComDebounce) || 0,
+      Number(parteImaginariaS0ComDebounce) || 0,
+    );
     const t = testarCriterioAngulo(s0, zeros, polos);
     const K = calcularGanhoK(s0, zeros, polos);
     const cxP = polos.filter((p) => p.im > 1e-8);
@@ -104,5 +121,12 @@ export function useCalculoLgr(
       partidas,
       routh0,
     };
-  }, [nGd, dGd, nHd, dHd, srd, sid]);
+  }, [
+    numeradorGComDebounce,
+    denominadorGComDebounce,
+    numeradorHComDebounce,
+    denominadorHComDebounce,
+    parteRealS0ComDebounce,
+    parteImaginariaS0ComDebounce,
+  ]);
 }

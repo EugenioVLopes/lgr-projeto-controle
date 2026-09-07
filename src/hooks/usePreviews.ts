@@ -4,24 +4,27 @@ import { complexoParaLatex, polinomioParaLatex } from "../components/Formula";
 import type { Complex } from "../lib/lgr/index";
 
 export function usePreviewFuncao(
-  numTexto: string,
-  denTexto: string,
+  numerador: string,
+  denominador: string,
   simbolo: string,
 ): string | null {
   return useMemo(() => {
-    const pN = analisarCoeficientes(numTexto);
-    const pD = analisarCoeficientes(denTexto);
-    if (!pN || !pD) return null;
-    return `${simbolo}(s) = \\frac{${polinomioParaLatex(pN)}}{${polinomioParaLatex(pD)}}`;
-  }, [numTexto, denTexto, simbolo]);
+    const coeficientesNumerador = analisarCoeficientes(numerador);
+    const coeficientesDenominador = analisarCoeficientes(denominador);
+    if (!coeficientesNumerador || !coeficientesDenominador) return null;
+    return `${simbolo}(s) = \\frac{${polinomioParaLatex(coeficientesNumerador)}}{${polinomioParaLatex(coeficientesDenominador)}}`;
+  }, [numerador, denominador, simbolo]);
 }
 
 export function usePreviewS0(
-  srTexto: string,
-  siTexto: string,
+  parteRealS0: string,
+  parteImaginariaS0: string,
 ): { s0: Complex; latex: string } {
   return useMemo(() => {
-    const s0 = criarComplexo(Number(srTexto) || 0, Number(siTexto) || 0);
+    const s0 = criarComplexo(
+      Number(parteRealS0) || 0,
+      Number(parteImaginariaS0) || 0,
+    );
     return { s0, latex: `s_0 = ${complexoParaLatex(s0)}` };
-  }, [srTexto, siTexto]);
+  }, [parteRealS0, parteImaginariaS0]);
 }
