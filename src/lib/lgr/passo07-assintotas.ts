@@ -6,12 +6,18 @@ export interface Assintotas {
   angs: number[];
 }
 
-export function calcularAssintotas(zeros: readonly Complex[], polos: readonly Complex[]): Assintotas {
+export function calcularAssintotas(
+  zeros: readonly Complex[],
+  polos: readonly Complex[],
+): Assintotas {
   const quantidadeAssintotas = polos.length - zeros.length;
   if (quantidadeAssintotas <= 0) return { sigma: null, angs: [] };
   const somaPolos = polos.reduce((acc, p) => acc + p.re, 0);
   const somaZeros = zeros.reduce((acc, z) => acc + z.re, 0);
   const sigma = (somaPolos - somaZeros) / quantidadeAssintotas;
-  const angs = Array.from({ length: quantidadeAssintotas }, (_, q) => ((2 * q + 1) * 180) / quantidadeAssintotas);
+  const angs = Array.from(
+    { length: quantidadeAssintotas },
+    (_, q) => ((2 * q + 1) * 180) / quantidadeAssintotas,
+  );
   return { sigma, angs };
 }

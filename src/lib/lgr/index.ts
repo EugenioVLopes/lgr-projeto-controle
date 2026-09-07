@@ -35,7 +35,10 @@ export { combinarMalhaAberta } from "./passo01-equacao";
 export { encontrarSegmentosEixoReal } from "./passo04-segmentos";
 export { calcularAssintotas } from "./passo07-assintotas";
 export { encontrarPontosBreakaway } from "./passo08-breakaway";
-export { encontrarCruzamentosEixoImaginario, montarTabelaRouth } from "./passo09-cruzamento";
+export {
+  encontrarCruzamentosEixoImaginario,
+  montarTabelaRouth,
+} from "./passo09-cruzamento";
 export {
   calcularAnguloPartida,
   testarCriterioAngulo,

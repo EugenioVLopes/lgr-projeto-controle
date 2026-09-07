@@ -44,4 +44,3 @@ npm run build    # tsc + vite build (PWA)
 - `roots()` Durand-Kerner próprio (graus 1 a 8), sem numpy.
 - Troquei o Routh simbólico do sympy por Routh numérico mais `Kcrit` via `cruzamentoJw`. O resultado para o usuário é o mesmo.
 - Plotly `plotly.js-basic-dist-min`, que mantém o pinch-zoom no celular.
-

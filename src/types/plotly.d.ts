@@ -1,8 +1,18 @@
-declare module 'plotly.js-basic-dist-min' {
+declare module "plotly.js-basic-dist-min" {
   const Plotly: {
-    react: (el: HTMLElement, data: unknown, layout: unknown, config?: unknown) => void
-    newPlot: (el: HTMLElement, data: unknown, layout?: unknown, config?: unknown) => void
-    purge: (el: HTMLElement) => void
-  }
-  export default Plotly
+    react: (
+      el: HTMLElement,
+      data: unknown,
+      layout: unknown,
+      config?: unknown,
+    ) => void;
+    newPlot: (
+      el: HTMLElement,
+      data: unknown,
+      layout?: unknown,
+      config?: unknown,
+    ) => void;
+    purge: (el: HTMLElement) => void;
+  };
+  export default Plotly;
 }

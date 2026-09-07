@@ -19,10 +19,14 @@ export function encontrarRaizes(coeficientes: readonly number[]): Complex[] {
     copia.pop();
     quantidadeZerosOrigem++;
   }
-  const zerosOrigem: Complex[] = Array.from({ length: quantidadeZerosOrigem }, () => criarComplexo(0, 0));
+  const zerosOrigem: Complex[] = Array.from(
+    { length: quantidadeZerosOrigem },
+    () => criarComplexo(0, 0),
+  );
   const grau = copia.length - 1;
   if (grau <= 0) return zerosOrigem;
-  if (grau === 1) return [...zerosOrigem, criarComplexo(-copia[1] / copia[0], 0)];
+  if (grau === 1)
+    return [...zerosOrigem, criarComplexo(-copia[1] / copia[0], 0)];
   // normaliza mônico
   const lider = copia[0];
   const monico = copia.map((v) => v / lider);
@@ -33,7 +37,11 @@ export function encontrarRaizes(coeficientes: readonly number[]): Complex[] {
   }
   const avaliar = (s: Complex): Complex => {
     let acumulado: Complex = criarComplexo(0, 0);
-    for (const coef of monico) acumulado = somarComplexos(multiplicarComplexos(acumulado, s), criarComplexo(coef, 0));
+    for (const coef of monico)
+      acumulado = somarComplexos(
+        multiplicarComplexos(acumulado, s),
+        criarComplexo(coef, 0),
+      );
     return acumulado;
   };
   for (let it = 0; it < 3000; it++) {
@@ -41,7 +49,12 @@ export function encontrarRaizes(coeficientes: readonly number[]): Complex[] {
     for (let i = 0; i < grau; i++) {
       const valor = avaliar(raizes[i]);
       let denominador: Complex = criarComplexo(1, 0);
-      for (let j = 0; j < grau; j++) if (i !== j) denominador = multiplicarComplexos(denominador, subtrairComplexos(raizes[i], raizes[j]));
+      for (let j = 0; j < grau; j++)
+        if (i !== j)
+          denominador = multiplicarComplexos(
+            denominador,
+            subtrairComplexos(raizes[i], raizes[j]),
+          );
       if (moduloComplexo(denominador) < 1e-300) continue;
       const delta = dividirComplexos(valor, denominador);
       raizes[i] = subtrairComplexos(raizes[i], delta);
