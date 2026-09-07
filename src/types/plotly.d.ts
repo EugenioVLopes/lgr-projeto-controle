@@ -1,4 +1,4 @@
-declare module 'plotly.js-dist-min' {
+declare module 'plotly.js-basic-dist-min' {
   const Plotly: {
     react: (el: HTMLElement, data: unknown, layout: unknown, config?: unknown) => void
     newPlot: (el: HTMLElement, data: unknown, layout?: unknown, config?: unknown) => void

@@ -58,6 +58,9 @@ input, select { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid v
 button.primary { width: 100%; padding: 13px; font-size: 1rem; font-weight: 700; background: var(--ink); color: var(--bg); border: 0; border-radius: 10px; margin-top: 10px; min-height: 44px; }
 details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
 summary { font-weight: 700; font-size: 0.94rem; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.formula { background: var(--code-bg); color: var(--ink); padding: 10px 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; font-size: 1rem; }
+.formula .katex { color: var(--ink); font-size: 1.02em; }
+.formula .katex-display { margin: 0; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.875rem; line-height: 1.5; background: var(--code-bg); color: var(--ink); padding: 8px; border-radius: 8px; overflow-x: auto; max-width: 65ch; }
 .ajuda { font-size: 0.875rem; color: var(--muted); max-width: 70ch; }
 .badge-ok { background: var(--ok-bg); color: var(--ok-ink); padding: 6px 10px; border-radius: 8px; font-weight: 700; }

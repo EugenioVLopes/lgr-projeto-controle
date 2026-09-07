@@ -1,4 +1,4 @@
-# Controle — LGR
+# Controle LGR
 
 Aplicativo web para cálculo e visualização do Lugar Geométrico das Raízes da disciplina DCA-3701 (UFRN).
 

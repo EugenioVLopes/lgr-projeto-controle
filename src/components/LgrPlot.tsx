@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import type PlotlyType from 'plotly.js-dist-min'
+import type PlotlyType from 'plotly.js-basic-dist-min'
 
 export interface Trace { x: number[]; y: number[]; mode?: string; name?: string; type?: string; marker?: unknown; line?: unknown }
 
 let plotlyPromise: Promise<typeof PlotlyType> | null = null
 function carregarPlotly(): Promise<typeof PlotlyType> {
   if (!plotlyPromise) {
-    plotlyPromise = import('plotly.js-dist-min').then((mod) => (mod.default ?? mod) as unknown as typeof PlotlyType)
+    plotlyPromise = import('plotly.js-basic-dist-min').then((mod) => (mod.default ?? mod) as unknown as typeof PlotlyType)
   }
   return plotlyPromise
 }

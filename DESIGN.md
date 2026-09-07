@@ -65,15 +65,15 @@ components:
     rounded: "{rounded.sm}"
 ---
 
-# Design System: LGR 12 Passos
+# Design system: LGR 12 passos
 
 ## Overview
 
-**Creative North Star: "O Caderno de Laboratório"**
+**Guiding idea: "O Caderno de Laboratório"**
 
-Ferramenta Operate densa e direta: 12 passos em `<details>` sequenciais, números mono, gráficos Plotly como prova. Estética slate institucional UFRN, sem marketing. Superfícies planas com borda 1px, raio 12px, ritmo 8/12px.
+Ferramenta Operate densa e direta. São 12 passos em `<details>` sequenciais, números mono e gráficos Plotly como prova. Visual slate institucional da UFRN, sem marketing. Superfícies planas com borda 1px, raio 12px, ritmo 8/12px.
 
-**Key Characteristics:**
+**Key points.**
 
 - Plano e legível no sol do campus
 - Mono só para dados e medida
@@ -95,16 +95,16 @@ Paleta slate + semântica de laboratório.
 - **Texto Secundário** (#475569): ajuda.
 - **Texto Terciário** (#64748b): rodapé.
 
-### Named Rules
+### Named rules
 
 **The Rarity Rule.** Vermelho (#dc2626) só para polos/erro; verde (#16a34a) só para pertence/zeros. Nunca como decoração.
 
 ## Typography
 
-**Body Font:** system-ui (com -apple-system, Segoe UI, Roboto)
-**Label/Mono Font:** ui-monospace para dados.
+**Body font.** system-ui (com -apple-system, Segoe UI, Roboto).
+**Label and mono font.** ui-monospace para dados.
 
-**Character:** Estável e escaneável; hierarquia por peso, não por família.
+**Character.** Eu quero texto estável e escaneável, com hierarquia por peso e não por família.
 
 ### Hierarchy
 
@@ -118,7 +118,7 @@ Paleta slate + semântica de laboratório.
 
 Coluna única max 860px, `grid2` 2→1 col @560px. `summary` altura mínima 44px. Plots fluidos `min(72vw,340px)`. Ordem visual = ordem DOM/foco.
 
-## Elevation & Depth
+## Elevation and depth
 
 Sistema plano por padrão; profundidade só por borda 1px. Sem sombras. Plot usa grade `--plot-grid`.
 
@@ -134,14 +134,14 @@ Raio 12px cards/details, 10px botões, 8px inputs/mono. Sem pills exceto badges 
 - **Primary:** fundo tinta, texto papel, min-height 44px.
 - **Hover / Focus:** `:focus-visible` anel 2px.
 
-### Cards / Containers
+### Cards and containers
 
 - **Corner Style:** 12px.
 - **Background:** surface.
 - **Border:** 1px border.
 - **Internal Padding:** 12px.
 
-### Inputs / Fields
+### Inputs and fields
 
 - **Style:** borda field-border, fundo surface, raio 8px, 44px.
 - **Focus:** anel tinta (claro) / azul claro (escuro).
@@ -151,7 +151,7 @@ Raio 12px cards/details, 10px botões, 8px inputs/mono. Sem pills exceto badges 
 
 - Header sticky com título + toggle de tema (`aria-pressed`). Sem router.
 
-## Do's and Don'ts
+## Dos and don'ts
 
 ### Do
 
