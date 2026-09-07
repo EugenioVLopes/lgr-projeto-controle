@@ -152,6 +152,7 @@ button.primary {
   min-height: 44px;
 }
 details {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -165,6 +166,7 @@ summary {
   min-height: 44px;
   display: flex;
   align-items: center;
+  padding-right: 104px;
 }
 .formula {
   background: var(--code-bg);
@@ -219,6 +221,53 @@ summary {
 .plot-carregando {
   font-size: 0.875rem;
   color: var(--muted);
+}
+.memoria {
+  margin: 8px 0;
+  border-left: 3px solid var(--field-border);
+  padding-left: 10px;
+}
+.memoria-titulo {
+  font-size: 0.81rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 8px 0 4px;
+}
+.dica-prova {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  margin: 0;
+  z-index: 2;
+}
+.dica-prova-botao {
+  width: auto;
+  padding: 6px 10px;
+  min-height: 36px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px dashed var(--field-border);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dica-prova-botao:hover {
+  border-color: var(--ink);
+}
+.dica-prova-texto {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(280px, 72vw);
+  font-size: 0.875rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0;
 }
 .grid2 {
   display: grid;

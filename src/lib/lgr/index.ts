@@ -45,4 +45,10 @@ export {
   calcularGanhoK,
 } from "./passo10-12-angulos";
 export { calcularRamosLgr } from "./ramos-lgr";
+export {
+  detalharAnguloS0,
+  detalharGanhoS0,
+  detalharPartida,
+  equacaoDerivadaBreakaway,
+} from "./memorias";
 export { formatarComplexo, polinomioParaTexto } from "./formatacao";

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import LgrPlot, { type Trace } from "./components/LgrPlot";
+import DicaProva from "./components/DicaProva";
 import Formula, {
   polinomioParaLatex,
   complexoParaLatex,
@@ -20,6 +21,11 @@ import {
   analisarCoeficientes,
   encontrarRaizes,
   montarTabelaRouth,
+  detalharAnguloS0,
+  detalharGanhoS0,
+  detalharPartida,
+  equacaoDerivadaBreakaway,
+  avaliarPolinomioReal,
   testarCriterioAngulo,
 } from "./lib/lgr/index";
 import type {
@@ -337,6 +343,7 @@ export default function App() {
                 latex={`1 + K \\cdot P(s) = 0 \\quad\\to\\quad ${polinomioParaLatex(calc.den)} + K \\cdot (${polinomioParaLatex(calc.num)}) = 0`}
                 descricao="Equação característica"
               />
+              <DicaProva dica="multiplica G·H, separa o K do resto. O que sobra com K é N(s), o resto é D(s). A equação é sempre D(s) + K·N(s) = 0." />
             </details>
             <details>
               <summary>Passo 2, forma fatorada</summary>
@@ -344,6 +351,7 @@ export default function App() {
                 latex={`P(s) = \\frac{N(s)}{D(s)} = \\frac{${polinomioParaLatex(calc.num)}}{${polinomioParaLatex(calc.den)}}`}
                 descricao="P igual a N sobre D"
               />
+              <DicaProva dica="fatora N(s)=0 para achar zeros, D(s)=0 para achar polos. Grau de D é np, grau de N é nz." />
             </details>
             <details open>
               <summary>
@@ -388,6 +396,7 @@ export default function App() {
               ) : (
                 <p>nenhum finito</p>
               )}
+              <DicaProva dica="polos são onde o denominador zera (K=0 começa aqui), zeros onde o numerador zera (K→∞ termina aqui). Marca x e o no plano." />
             </details>
             <details>
               <summary>Passo 4, segmentos eixo real</summary>
@@ -401,6 +410,22 @@ export default function App() {
                       .join("  ")
                   : "nenhum segmento"}
               </div>
+              <div className="memoria">
+                <p className="memoria-titulo">Como cheguei aqui</p>
+                <div className="mono">
+                  {(() => {
+                    const reais = [
+                      ...calc.polos.filter((p) => ehNumeroReal(p)),
+                      ...calc.zeros.filter((z) => ehNumeroReal(z)),
+                    ]
+                      .map((z) => z.re)
+                      .sort((a, b) => b - a);
+                    if (!reais.length) return "sem polos/zeros reais";
+                    return `reais ordenados: ${reais.map((r) => r.toFixed(4)).join(", ")} → testa ponto médio de cada intervalo e conta polos+zeros à direita (ímpar = pertence)`;
+                  })()}
+                </div>
+              </div>
+              <DicaProva dica="marca polos (x) e zeros (o) no eixo real, da direita para a esquerda conta quantos tem à direita do trecho. Ímpar = o trecho é LGR. Não precisa de conta, só contar." />
             </details>
             <details>
               <summary>Passo 5, lugares separados</summary>
@@ -408,10 +433,12 @@ export default function App() {
                 latex={`L_s = \\max(n_p,n_z) = \\max(${calc.polos.length},${calc.zeros.length}) = ${Math.max(calc.polos.length, calc.zeros.length)}`}
                 descricao={`Número de lugares separados igual a ${Math.max(calc.polos.length, calc.zeros.length)}`}
               />
+              <DicaProva dica="Ls é o número de ramos = número de polos (quase sempre maior que zeros). Cada polo sai um ramo." />
             </details>
             <details>
               <summary>Passo 6, simetria</summary>
               <p>Simétrico ao eixo real (pares conjugados).</p>
+              <DicaProva dica="só fala que o desenho de cima espelha embaixo. Se achar um ponto complexo, o conjugado também é. Não tem conta." />
             </details>
             <details open>
               <summary>Passo 7, assíntotas</summary>
@@ -427,6 +454,21 @@ export default function App() {
                         latex={`n_a = ${calc.polos.length - calc.zeros.length},\\quad \\sigma_a = ${sig.toFixed(4)},\\quad \\phi = ${calc.angs.map((a) => `${a.toFixed(1)}^{\\circ}`).join(",\\;")}`}
                         descricao={`Assíntotas com sigma a ${sig.toFixed(4)}`}
                       />
+                      <div className="memoria">
+                        <p className="memoria-titulo">Como cheguei aqui</p>
+                        <Formula
+                          latex={`\\sum p_i = ${calc.polos.map((p) => p.re.toFixed(2)).join(" + ") || "0"} = ${calc.polos.reduce((a, p) => a + p.re, 0).toFixed(4)},\\quad \\sum z_i = ${calc.zeros.length ? calc.zeros.map((z) => z.re.toFixed(2)).join(" + ") : "0"} = ${calc.zeros.reduce((a, z) => a + z.re, 0).toFixed(4)}`}
+                          descricao="Somas das partes reais de polos e zeros"
+                        />
+                        <Formula
+                          latex={`\\sigma_a = \\frac{\\sum p_i - \\sum z_i}{n_p - n_z} = \\frac{${calc.polos.reduce((a, p) => a + p.re, 0).toFixed(4)} - (${calc.zeros.reduce((a, z) => a + z.re, 0).toFixed(4)})}{${calc.polos.length - calc.zeros.length}} = ${sig.toFixed(4)}`}
+                          descricao={`Centroide sigma a igual a ${sig.toFixed(4)}`}
+                        />
+                        <div className="mono">
+                          {`phi(q) = (2q+1)*180/na → ${calc.angs.map((a, q) => `q=${q}: ${a.toFixed(1)}°`).join("; ")}`}
+                        </div>
+                      </div>
+                      <DicaProva dica="sigma_a = (soma dos polos - soma dos zeros) / (np - nz), usando só a parte real. Depois os ângulos são (2q+1)*180/na para q = 0..na-1. Desenha as retas saindo do sigma_a." />
                       <LgrPlot
                         title="Assíntotas"
                         descritoPor="desc-assintotas"
@@ -458,6 +500,26 @@ export default function App() {
             </details>
             <details>
               <summary>Passo 8, breakaway/break-in (dK/ds=0)</summary>
+              {(() => {
+                const det = equacaoDerivadaBreakaway(calc.num, calc.den);
+                return (
+                  <div className="memoria">
+                    <p className="memoria-titulo">Como cheguei aqui</p>
+                    <Formula
+                      latex={`N(s) = ${polinomioParaLatex(calc.num)},\\quad D(s) = ${polinomioParaLatex(calc.den)}`}
+                      descricao="Numerador e denominador da malha aberta"
+                    />
+                    <Formula
+                      latex={`N'(s) = ${polinomioParaLatex(det.dNum)},\\quad D'(s) = ${polinomioParaLatex(det.dDen)}`}
+                      descricao="Derivadas de N e D"
+                    />
+                    <Formula
+                      latex={`N \\cdot D' - D \\cdot N' = ${polinomioParaLatex(det.eq)} = 0`}
+                      descricao="Equação dK/ds igual a zero"
+                    />
+                  </div>
+                );
+              })()}
               {calc.bk.length ? (
                 <Formula
                   latex={calc.bk
@@ -471,15 +533,54 @@ export default function App() {
               ) : (
                 <p>nenhum ponto válido com K&gt;0 no LGR</p>
               )}
+              <DicaProva dica="K = -D(s)/N(s). Deriva dK/ds = 0 → resolve N·D' - D·N' = 0. Só vale raiz real em trecho do LGR (passo 4) com K > 0. Calcula K = -D(s)/N(s) em cada candidata e descarta K negativo." />
             </details>
             <details>
               <summary>
                 Passo 9, cruzamento eixo imaginário (Routh + s=jω)
               </summary>
+              <div className="memoria">
+                <p className="memoria-titulo">Como cheguei aqui</p>
+                <Formula
+                  latex={`R_D=${polinomioParaLatex(calc.info.Re_D || [0], "\\omega")},\\; I_D=${polinomioParaLatex(calc.info.Im_D || [0], "\\omega")},\\; R_N=${polinomioParaLatex(calc.info.Re_N || [0], "\\omega")},\\; I_N=${polinomioParaLatex(calc.info.Im_N || [0], "\\omega")}`}
+                  descricao="Partes real e imaginária de D(jw) e N(jw)"
+                />
+                <div className="mono">
+                  {`s=jω → D(jω)=Re_D(ω)+j·Im_D(ω), N(jω)=Re_N(ω)+j·Im_N(ω). Condição Im[D/N]=0 → Re_D·Im_N − Im_D·Re_N = 0`}
+                </div>
+              </div>
               <Formula
                 latex={`\\mathrm{cross}(\\omega) = ${polinomioParaLatex(calc.info.cross, "\\omega")} = 0`}
                 descricao="Polinômio de cruzamento em ômega igual a zero"
               />
+              {calc.cruzs.length ? (
+                <div className="memoria">
+                  <p className="memoria-titulo">Substituindo ω para achar K</p>
+                  <div className="mono">
+                    {calc.cruzs
+                      .map((c) => {
+                        const reD = avaliarPolinomioReal(
+                          calc.info.Re_D || [0],
+                          c.w,
+                        );
+                        const reN = avaliarPolinomioReal(
+                          calc.info.Re_N || [0],
+                          c.w,
+                        );
+                        const imD = avaliarPolinomioReal(
+                          calc.info.Im_D || [0],
+                          c.w,
+                        );
+                        const imN = avaliarPolinomioReal(
+                          calc.info.Im_N || [0],
+                          c.w,
+                        );
+                        return `ω=${c.w.toFixed(4)}: Re_D=${reD.toFixed(3)}, Im_D=${imD.toFixed(3)}, Re_N=${reN.toFixed(3)}, Im_N=${imN.toFixed(3)} → K=−Re_D/Re_N=${c.K.toFixed(4)}`;
+                      })
+                      .join("\n")}
+                  </div>
+                </div>
+              ) : null}
               {calc.cruzs.length ? (
                 <Formula
                   latex={calc.cruzs
@@ -512,6 +613,7 @@ export default function App() {
                 })()}
                 descricao={`Tabela de Routh para K igual a 1, primeira coluna: ${calc.routh0.map((r) => r[0].toFixed(3)).join(", ")}`}
               />
+              <DicaProva dica="monta D+K·N=0, separa Re e Im com s=jω (j²=−1, j³=−j). Resolve cross(ω)=0, pega ω>0 real. Acha K=−Re_D/Re_N (ou −Im_D/Im_N). No Routh, zera a linha que dá K crítico e lê ω da linha auxiliar." />
             </details>
             <details>
               <summary>Passo 10, ângulos partida/chegada</summary>
@@ -525,7 +627,30 @@ export default function App() {
                     .join(",\\quad ")}
                   descricao="Ângulos de partida dos polos complexos"
                 />
-              ) : (
+              ) : null}
+              {calc.partidas.length ? (
+                <div className="memoria">
+                  <p className="memoria-titulo">Como cheguei aqui</p>
+                  <div className="mono">
+                    {calc.partidas
+                      .map(({ p, ang }) => {
+                        const det = detalharPartida(p, calc.polos, calc.zeros);
+                        const sp =
+                          det.parcelasPolos
+                            .map((x) => `${x.ang.toFixed(1)}°(${x.origem})`)
+                            .join(" + ") || "0";
+                        const sz =
+                          det.parcelasZeros
+                            .map((x) => `${x.ang.toFixed(1)}°(${x.origem})`)
+                            .join(" + ") || "0";
+                        return `p=${formatarComplexo(p)}: θ=180−(∑polos ${sp})+(∑zeros ${sz})=${ang.toFixed(2)}°`;
+                      })
+                      .join("\n")}
+                  </div>
+                </div>
+              ) : null}
+              <DicaProva dica="no polo complexo, soma os ângulos até os outros polos, soma até os zeros, faz 180 − somaPolos + somaZeros. Esse é o ângulo que o ramo sai do polo." />
+              {calc.partidas.length ? null : (
                 <p>
                   sem polos complexos, não se aplica (
                   {calc.polos.filter((p) => !ehNumeroReal(p)).length} complexos)
@@ -565,18 +690,72 @@ export default function App() {
                   },
                 ]}
               />
+              <div className="memoria">
+                <p className="memoria-titulo">Como cheguei aqui</p>
+                <div className="mono">
+                  {(() => {
+                    const det = detalharAnguloS0(
+                      calc.s0,
+                      calc.zeros,
+                      calc.polos,
+                    );
+                    const lp = det.parcelasPolos
+                      .map(
+                        (x) =>
+                          `∠(s0−${x.origem})=∠(${x.vetorRe.toFixed(2)}${x.vetorIm >= 0 ? "+" : ""}${x.vetorIm.toFixed(2)}j)=${x.ang.toFixed(1)}°`,
+                      )
+                      .join("\n");
+                    const lz = det.parcelasZeros.length
+                      ? det.parcelasZeros
+                          .map(
+                            (x) =>
+                              `∠(s0−${x.origem})=∠(${x.vetorRe.toFixed(2)}${x.vetorIm >= 0 ? "+" : ""}${x.vetorIm.toFixed(2)}j)=${x.ang.toFixed(1)}°`,
+                          )
+                          .join("\n")
+                      : "sem zeros finitos";
+                    return `${lp}\n--- zeros ---\n${lz}\n∑polos=${det.parcelasPolos.reduce((a, x) => a + x.ang, 0).toFixed(2)}° ∑zeros=${det.parcelasZeros.reduce((a, x) => a + x.ang, 0).toFixed(2)}° → ∠=${calc.t.ang.toFixed(2)}° → norm ${calc.t.norm.toFixed(2)}°`;
+                  })()}
+                </div>
+              </div>
               <Formula
                 id="desc-s0"
                 latex={`s_0 = ${complexoParaLatex(calc.s0)},\\quad \\angle P(s_0) = ${calc.t.norm.toFixed(2)}^{\\circ}`}
                 descricao={`Ponto s0 com ângulo ${calc.t.norm.toFixed(2)} graus`}
               />
+              <DicaProva dica="para cada polo/zero calcula o vetor s0−p (diferença real e imag) e o ângulo com arctan2(Im,Re). Soma zeros menos soma polos. Normaliza para ±180°. Se der ±180° (±5°) pertence ao LGR." />
             </details>
             <details open>
               <summary>Passo 12, K em s0</summary>
+              <div className="memoria">
+                <p className="memoria-titulo">Como cheguei aqui</p>
+                <div className="mono">
+                  {(() => {
+                    const det = detalharGanhoS0(
+                      calc.s0,
+                      calc.zeros,
+                      calc.polos,
+                    );
+                    const lp = det.distPolos
+                      .map((d, i) => `|s0−p${i + 1}|=${d.toFixed(4)}`)
+                      .join(" × ");
+                    const lz = det.distZeros.length
+                      ? det.distZeros
+                          .map((d, i) => `|s0−z${i + 1}|=${d.toFixed(4)}`)
+                          .join(" × ")
+                      : "1 (sem zeros)";
+                    const pp = det.distPolos.reduce((a, d) => a * d, 1);
+                    const pz = det.distZeros.length
+                      ? det.distZeros.reduce((a, d) => a * d, 1)
+                      : 1;
+                    return `${lp} = ${pp.toFixed(4)}\n${lz} = ${pz.toFixed(4)}\nK = ${pp.toFixed(4)} / ${pz.toFixed(4)} = ${Number.isFinite(calc.K) ? calc.K.toFixed(6) : "∞"}`;
+                  })()}
+                </div>
+              </div>
               <Formula
                 latex={`K = \\frac{\\prod|s_0-p_i|}{\\prod|s_0-z_i|} = ${Number.isFinite(calc.K) ? calc.K.toFixed(6) : "\\infty"}`}
                 descricao={`Ganho K igual a ${Number.isFinite(calc.K) ? calc.K.toFixed(6) : "infinito"}`}
               />
+              <DicaProva dica="K = produto das distâncias de s0 aos polos dividido pelo produto das distâncias aos zeros. Distância = hypot(Re(s0−p), Im(s0−p)). Se s0 está em cima de um zero, K=0; se não há zeros, divide por 1." />
             </details>
             <details open>
               <summary>LGR completo</summary>
