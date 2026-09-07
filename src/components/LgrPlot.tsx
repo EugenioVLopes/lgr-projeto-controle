@@ -1,44 +1,30 @@
 import { useEffect, useRef, useState } from "react";
+import type { Config, Data, Layout } from "plotly.js";
 import type PlotlyType from "plotly.js-basic-dist-min";
+import { coresDoTema, type Tema } from "../lib/plotTema";
 
-export interface Trace {
-  x: number[];
-  y: number[];
-  mode?: string;
-  name?: string;
-  type?: string;
-  marker?: unknown;
-  line?: unknown;
-}
+export type Trace = Data;
 
 let plotlyPromise: Promise<typeof PlotlyType> | null = null;
 function carregarPlotly(): Promise<typeof PlotlyType> {
   if (!plotlyPromise) {
     plotlyPromise = import("plotly.js-basic-dist-min").then(
-      (mod) => (mod.default ?? mod) as unknown as typeof PlotlyType,
+      (mod) => mod.default,
     );
   }
   return plotlyPromise;
-}
-
-function lerVar(nome: string, fallback: string): string {
-  if (typeof window === "undefined") return fallback;
-  const v = getComputedStyle(document.documentElement)
-    .getPropertyValue(nome)
-    .trim();
-  return v || fallback;
 }
 
 export default function LgrPlot({
   traces,
   title,
   descritoPor,
-  tema,
+  tema = "light",
 }: {
   traces: Trace[];
   title: string;
   descritoPor?: string;
-  tema?: "light" | "dark";
+  tema?: Tema;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [carregando, setCarregando] = useState(true);
@@ -46,8 +32,6 @@ export default function LgrPlot({
   const [ehMobile, setEhMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 560 : false,
   );
-  const [tickTema, setTickTema] = useState(0);
-  const payload = JSON.stringify(traces);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -58,67 +42,65 @@ export default function LgrPlot({
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Limpeza ao desmontar: libera o gráfico do DOM.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const obs = new MutationObserver(() => setTickTema((t) => t + 1));
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => obs.disconnect();
+    const alvo = ref.current;
+    return () => {
+      if (alvo && plotlyPromise) {
+        void plotlyPromise
+          .then((Plotly) => {
+            try {
+              Plotly.purge(alvo);
+            } catch {}
+          })
+          .catch(() => {});
+      }
+    };
   }, []);
 
   useEffect(() => {
     let montado = true;
     const el = ref.current;
+    if (!el) return;
     setCarregando(true);
     setErro(null);
-    carregarPlotly()
+    void carregarPlotly()
       .then((Plotly) => {
-        if (!montado || !el) return;
-        const atual = JSON.parse(payload) as Trace[];
-        const surface = lerVar("--surface", "#ffffff");
-        const ink = lerVar("--ink", "#0f172a");
-        const muted = lerVar("--muted", "#475569");
-        const grid = lerVar("--plot-grid", "#e2e8f0");
-        const border = lerVar("--border", "#e2e8f0");
-        Plotly.react(
-          el as HTMLElement,
-          atual as never,
-          {
-            title: { text: title, font: { size: 14, color: ink } },
-            paper_bgcolor: surface,
-            plot_bgcolor: surface,
-            font: { color: ink },
-            xaxis: {
-              title: { text: "Real" },
-              zeroline: true,
-              zerolinecolor: border,
-              gridcolor: grid,
-              tickfont: { color: muted },
-            },
-            yaxis: {
-              title: { text: "Imag (jω)" },
-              zeroline: true,
-              zerolinecolor: border,
-              gridcolor: grid,
-              tickfont: { color: muted },
-              scaleanchor: "x",
-            },
-            margin: { l: 45, r: 15, t: 40, b: 40 },
-            showlegend: true,
-            legend: { orientation: ehMobile ? "v" : "h" },
-          } as never,
-          {
-            responsive: true,
-            displaylogo: false,
-            displayModeBar: true,
-            scrollZoom: true,
-            useResizeHandler: true,
-            toImageButtonOptions: { format: "png" },
+        if (!montado) return;
+        const cores = coresDoTema(tema);
+        const layout: Partial<Layout> = {
+          title: { text: title, font: { size: 14, color: cores.ink } },
+          paper_bgcolor: cores.surface,
+          plot_bgcolor: cores.surface,
+          font: { color: cores.ink },
+          xaxis: {
+            title: { text: "Real" },
+            zeroline: true,
+            zerolinecolor: cores.border,
+            gridcolor: cores.grid,
+            tickfont: { color: cores.muted },
           },
-        );
-        if (montado) setCarregando(false);
+          yaxis: {
+            title: { text: "Imag (jω)" },
+            zeroline: true,
+            zerolinecolor: cores.border,
+            gridcolor: cores.grid,
+            tickfont: { color: cores.muted },
+            scaleanchor: "x",
+          },
+          margin: { l: 45, r: 15, t: 40, b: 40 },
+          showlegend: true,
+          legend: { orientation: ehMobile ? "v" : "h" },
+        };
+        const config: Partial<Config> = {
+          responsive: true,
+          displaylogo: false,
+          displayModeBar: true,
+          scrollZoom: true,
+          toImageButtonOptions: { format: "png" },
+        };
+        void Plotly.react(el, traces, layout, config);
+        setCarregando(false);
       })
       .catch(() => {
         if (montado) {
@@ -130,19 +112,8 @@ export default function LgrPlot({
       });
     return () => {
       montado = false;
-      if (el && plotlyPromise) {
-        const alvo: HTMLElement = el;
-        carregarPlotly().then((Plotly) => {
-          try {
-            (Plotly as { purge?: (el: HTMLElement) => void }).purge?.(alvo);
-          } catch {
-            /* noop */
-          }
-        });
-      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, payload, ehMobile, tema, tickTema]);
+  }, [traces, title, ehMobile, tema]);
 
   return (
     <div

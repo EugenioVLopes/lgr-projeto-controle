@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import LgrPlot from "../LgrPlot";
+import LgrPlot, { type Trace } from "../LgrPlot";
 import Formula from "../Formula";
 import DicaProva from "../DicaProva";
 import type { Complex } from "../../lib/lgr/index";
@@ -57,7 +57,7 @@ export default function Passo07Assintotas({
       `phi(q) = (2q+1)*180/na → ${angs.map((a, q) => `q=${q}: ${a.toFixed(1)}°`).join("; ")}`,
     [angs],
   );
-  const traces = useMemo(() => {
+  const traces = useMemo<Trace[]>(() => {
     if (sigma === null) return [];
     const sig: number = sigma;
     return [

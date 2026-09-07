@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import LgrPlot from "../LgrPlot";
+import LgrPlot, { type Trace } from "../LgrPlot";
 import Formula, { complexoParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
 import { detalharAnguloS0, formatarComplexo } from "../../lib/lgr/index";
@@ -53,7 +53,7 @@ export default function Passo11AnguloS0({
     () => `Ponto s0 com ângulo ${t.norm.toFixed(2)} graus`,
     [t],
   );
-  const traces = useMemo(
+  const traces = useMemo<Trace[]>(
     () => [
       {
         x: polos.map((p) => p.re),

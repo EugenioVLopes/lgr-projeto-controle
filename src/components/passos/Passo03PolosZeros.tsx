@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import LgrPlot from "../LgrPlot";
+import LgrPlot, { type Trace } from "../LgrPlot";
 import Formula, { complexoParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
 import { formatarComplexo } from "../../lib/lgr/index";
@@ -42,7 +42,7 @@ export default function Passo03PolosZeros({
     () => `Zeros: ${zeros.map(formatarComplexo).join("; ")}`,
     [zeros],
   );
-  const traces = useMemo(
+  const traces = useMemo<Trace[]>(
     () => [
       {
         x: polos.map((p) => p.re),
