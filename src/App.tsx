@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import LgrPlot from './components/LgrPlot'
 import { EXEMPLOS } from './lib/examples'
 import {
-  C, acharBreakaway, acharSegmentosEixoReal, anguloPartida, calcularAssintotas,
-  calcularK, calcularLgr, cruzamentoJw, fazerPasso1, fmt, isReal, parseCoefs,
-  polyStr, roots, routhTable, testarAngulo,
-} from './lib/lgr'
+  criarComplexo, encontrarPontosBreakaway, encontrarSegmentosEixoReal, calcularAnguloPartida, calcularAssintotas,
+  calcularGanhoK, calcularRamosLgr, encontrarCruzamentosEixoImaginario, combinarMalhaAberta, formatarComplexo, ehNumeroReal, analisarCoeficientes,
+  polinomioParaTexto, encontrarRaizes, montarTabelaRouth, testarCriterioAngulo,
+} from './lib/lgr/index'
 
 export default function App() {
   const [exId, setExId] = useState('q1')
@@ -23,21 +23,21 @@ export default function App() {
   }
 
   const calc = useMemo(() => {
-    const pNG = parseCoefs(nG), pDG = parseCoefs(dG), pNH = parseCoefs(nH), pDH = parseCoefs(dH)
+    const pNG = analisarCoeficientes(nG), pDG = analisarCoeficientes(dG), pNH = analisarCoeficientes(nH), pDH = analisarCoeficientes(dH)
     if (!pNG || !pDG || !pNH || !pDH) return { error: 'Confere os coeficientes (use espaços: ex. "1 4 0")' } as const
-    const { num, den } = fazerPasso1(pNG, pDG, pNH, pDH)
-    const zeros = roots(num), polos = roots(den)
-    const segs = acharSegmentosEixoReal(zeros, polos)
+    const { num, den } = combinarMalhaAberta(pNG, pDG, pNH, pDH)
+    const zeros = encontrarRaizes(num), polos = encontrarRaizes(den)
+    const segs = encontrarSegmentosEixoReal(zeros, polos)
     const { sigma, angs } = calcularAssintotas(zeros, polos)
-    const bk = acharBreakaway(num, den, polos, zeros)
-    const { cruzs, info } = cruzamentoJw(den, num)
-    const { Ks, ramos } = calcularLgr(num, den)
-    const s0 = C(Number(sr) || 0, Number(si) || 0)
-    const t = testarAngulo(s0, zeros, polos)
-    const K = calcularK(s0, zeros, polos)
+    const bk = encontrarPontosBreakaway(num, den, polos, zeros)
+    const { cruzs, info } = encontrarCruzamentosEixoImaginario(den, num)
+    const { Ks, ramos } = calcularRamosLgr(num, den)
+    const s0 = criarComplexo(Number(sr) || 0, Number(si) || 0)
+    const t = testarCriterioAngulo(s0, zeros, polos)
+    const K = calcularGanhoK(s0, zeros, polos)
     const cxP = polos.filter((p) => p.im > 1e-8)
-    const partidas = cxP.map((p) => ({ p, ang: anguloPartida(p, polos, zeros) }))
-    const routh0 = routhTable(den, num, 1)
+    const partidas = cxP.map((p) => ({ p, ang: calcularAnguloPartida(p, polos, zeros) }))
+    const routh0 = montarTabelaRouth(den, num, 1)
     return { error: null as null, num, den, zeros, polos, segs, sigma, angs, bk, cruzs, info, Ks, ramos, s0, t, K, partidas, routh0 }
   }, [nG, dG, nH, dH, sr, si])
 
@@ -64,19 +64,19 @@ export default function App() {
         {calc.error ? <div className="card badge-warn">{calc.error}</div> : (
           <>
             <details open><summary>Passo 1 — Equação característica</summary>
-              <div className="mono">G(s)H(s) = K·({polyStr(calc.num)})/({polyStr(calc.den)})</div>
-              <div className="mono">1 + K·P(s) = 0 → {polyStr(calc.den)} + K·({polyStr(calc.num)}) = 0</div>
+              <div className="mono">G(s)H(s) = K·({polinomioParaTexto(calc.num)})/({polinomioParaTexto(calc.den)})</div>
+              <div className="mono">1 + K·P(s) = 0 → {polinomioParaTexto(calc.den)} + K·({polinomioParaTexto(calc.num)}) = 0</div>
             </details>
             <details><summary>Passo 2 — Forma fatorada</summary>
-              <div className="mono">P(s) = N(s)/D(s), N={polyStr(calc.num)}, D={polyStr(calc.den)}</div>
+              <div className="mono">P(s) = N(s)/D(s), N={polinomioParaTexto(calc.num)}, D={polinomioParaTexto(calc.den)}</div>
             </details>
             <details open><summary>Passo 3 — Polos e zeros ({calc.polos.length}p / {calc.zeros.length}z)</summary>
               <LgrPlot title="Polos (x) e zeros (o)" traces={[
                 { x: calc.polos.map((p) => p.re), y: calc.polos.map((p) => p.im), mode: 'markers', name: 'polos', marker: { symbol: 'x', size: 11, color: 'red' } },
                 { x: calc.zeros.map((z) => z.re), y: calc.zeros.map((z) => z.im), mode: 'markers', name: 'zeros', marker: { symbol: 'circle-open', size: 10, color: 'green' } },
               ]} />
-              <div className="mono">polos: {calc.polos.map(fmt).join(' · ')}</div>
-              <div className="mono">zeros: {calc.zeros.length ? calc.zeros.map(fmt).join(' · ') : 'nenhum finito'}</div>
+              <div className="mono">polos: {calc.polos.map(formatarComplexo).join(' · ')}</div>
+              <div className="mono">zeros: {calc.zeros.length ? calc.zeros.map(formatarComplexo).join(' · ') : 'nenhum finito'}</div>
             </details>
             <details><summary>Passo 4 — Segmentos eixo real</summary>
               <div className="mono">{calc.segs.length ? calc.segs.map(([a, b]) => `[${a === -Infinity ? '-∞' : a.toFixed(4)}, ${b.toFixed(4)}]`).join('  ') : 'nenhum segmento'}</div>
@@ -98,17 +98,17 @@ export default function App() {
               )}
             </details>
             <details><summary>Passo 8 — Breakaway/Break-in (dK/ds=0)</summary>
-              <div className="mono">{calc.bk.length ? calc.bk.map((b) => `s=${fmt(b.s)} K=${b.K.toFixed(4)}`).join('\n') : 'nenhum ponto válido com K>0 no LGR'}</div>
+              <div className="mono">{calc.bk.length ? calc.bk.map((b) => `s=${formatarComplexo(b.s)} K=${b.K.toFixed(4)}`).join('\n') : 'nenhum ponto válido com K>0 no LGR'}</div>
             </details>
             <details><summary>Passo 9 — Cruzamento eixo imaginário (Routh + s=jω)</summary>
-              <div className="mono">cross(ω)={polyStr(calc.info.cross, 'ω')}=0</div>
+              <div className="mono">cross(ω)={polinomioParaTexto(calc.info.cross, 'ω')}=0</div>
               <div className="mono">{calc.cruzs.length ? calc.cruzs.map((c) => `ω=${c.w.toFixed(4)} K=${c.K.toFixed(4)} s=±${c.w.toFixed(4)}j`).join('\n') : 'não cruza p/ K>0'}</div>
               <div className="mono">Routh K=1, 1ª coluna: {calc.routh0.map((r) => r[0].toFixed(3)).join(' | ')}</div>
             </details>
             <details><summary>Passo 10 — Ângulos partida/chegada</summary>
-              <div className="mono">{calc.partidas.length ? calc.partidas.map((p) => `p=${fmt(p.p)} θd=${p.ang.toFixed(2)}°`).join('\n') : 'sem polos complexos — não se aplica (' + calc.polos.filter((p) => !isReal(p)).length + ' complexos)'}</div>
+              <div className="mono">{calc.partidas.length ? calc.partidas.map((p) => `p=${formatarComplexo(p.p)} θd=${p.ang.toFixed(2)}°`).join('\n') : 'sem polos complexos — não se aplica (' + calc.polos.filter((p) => !ehNumeroReal(p)).length + ' complexos)'}</div>
             </details>
-            <details open><summary>Passo 11 — Critério do ângulo em s0={fmt(calc.s0)}</summary>
+            <details open><summary>Passo 11 — Critério do ângulo em s0={formatarComplexo(calc.s0)}</summary>
               <p className={calc.t.pertence ? 'badge-ok' : 'badge-warn'}>{calc.t.pertence ? 'PERTENCE ao LGR' : 'NÃO pertence'} (∠={calc.t.norm.toFixed(2)}°, alvo ±180°)</p>
               <LgrPlot title="Teste s0" traces={[
                 { x: calc.polos.map((p) => p.re), y: calc.polos.map((p) => p.im), mode: 'markers', name: 'polos', marker: { color: 'red', symbol: 'x', size: 10 } },
