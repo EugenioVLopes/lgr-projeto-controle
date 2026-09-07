@@ -51,4 +51,13 @@ export {
   detalharPartida,
   equacaoDerivadaBreakaway,
 } from "./memorias";
-export { formatarComplexo, polinomioParaTexto } from "./formatacao";
+export {
+  coeficienteLider,
+  complexoParaLatex,
+  fatorLinearParaLatex,
+  fatoresParaLatex,
+  formatarComplexo,
+  formatarNumLatex,
+  polinomioFatoradoParaLatex,
+  polinomioParaTexto,
+} from "./formatacao";

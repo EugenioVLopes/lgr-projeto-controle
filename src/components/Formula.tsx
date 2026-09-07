@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import "katex/dist/katex.min.css";
-import type { Complex } from "../lib/lgr/index";
 
 let katexPromise: Promise<typeof import("katex")> | null = null;
 function carregarKatex(): Promise<typeof import("katex")> {
@@ -36,13 +35,14 @@ export function polinomioParaLatex(
   return partes.join("") || "0";
 }
 
-export function complexoParaLatex(z: Complex, decimais = 4): string {
-  const re = +z.re.toFixed(decimais);
-  const im = +z.im.toFixed(decimais);
-  if (Math.abs(im) < 1e-10) return `${re}`;
-  if (Math.abs(re) < 1e-10) return `${im}j`;
-  return im >= 0 ? `${re} + ${im}j` : `${re} - ${Math.abs(im)}j`;
-}
+export {
+  coeficienteLider,
+  complexoParaLatex,
+  fatorLinearParaLatex,
+  fatoresParaLatex,
+  formatarNumLatex,
+  polinomioFatoradoParaLatex,
+} from "../lib/lgr/formatacao";
 
 export default function Formula({
   latex,

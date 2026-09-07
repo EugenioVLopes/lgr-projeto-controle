@@ -115,7 +115,12 @@ export default function App() {
               num={calculoLgr.num}
               den={calculoLgr.den}
             />
-            <Passo02FormaFatorada num={calculoLgr.num} den={calculoLgr.den} />
+            <Passo02FormaFatorada
+              num={calculoLgr.num}
+              den={calculoLgr.den}
+              zeros={calculoLgr.zeros}
+              polos={calculoLgr.polos}
+            />
             <Passo03PolosZeros
               polos={calculoLgr.polos}
               zeros={calculoLgr.zeros}
