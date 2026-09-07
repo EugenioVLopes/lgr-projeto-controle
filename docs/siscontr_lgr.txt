@@ -1,0 +1,809 @@
+                        Agradecimentos
+
+
+
+
+     Agradecemos      ao    Prof.      Dr.   André    Laurindo      Maitelli
+
+     (www.dca.ufrn.br/~maitelli) por ter, gentilmente, cedido o material
+
+     didático que serviu de fonte para elaboração deste texto. Agradecemos
+
+     ainda, a todos os demais professores do Departamento de Engenharia
+
+     de Computação e Automação (DCA / UFRN) que, de alguma forma,
+
+     também contribuíram com o conteúdo deste material. Por fim, agradecemos
+
+     a todos os alunos que têm contribuído para o aprimoramento deste texto
+
+     com suas importantes sugestões.
+
+
+
+
+iv                                                               Sistemas de Controle
+1     PROBLEMA DE CONTROLE
+
+    O objetivo principal do estudo dos sistemas de controle e resolver o que se costuma
+denominar por “Problema de Controle”. Para que se possa apresentar uma formulação geral
+do que seja o problema de controle, são necessárias algumas definições iniciais.
+
+1.1    Definições
+
+•     Planta
+
+     É uma parte de um equipamento ou instalação industrial, eventualmente um conjunto de
+itens de uma máquina que funcionam juntos, cuja finalidade é desempenhar uma dada
+operação.
+
+•     Processo
+
+    Pode ser definido como uma operação ou desenvolvimento natural que evolui
+progressivamente, caracterizado por uma série de mudanças graduais que se sucedem de
+modo relativamente fixo, conduzindo a um resultado ou finalidade particular.
+
+•     Sistema
+
+    É uma disposição, conjunto ou coleção de partes, dentro de um universo, que estão
+conectadas ou relacionadas de tal maneira a formarem um todo.
+
+•     Sistema Físico
+
+      É uma parte do universo que foi delimitada para estudo.
+
+•     Especificações de Desempenho
+
+     São descrições do comportamento a ser apresentado pelo sistema físico, conforme
+solicitação do usuário.
+
+•     Modelo
+
+     Consiste na representação de certas características do sistema físico que são relevantes
+para seu estudo.
+
+•     Controle
+
+       É a ação de fazer com que um sistema físico atenda as especificações de desempenho
+determinadas a priori.
+
+•     Controlador
+
+        Dispositivo utilizado para a obtenção do controle de um sistema físico.
+
+•     Sistema de Controle
+
+        Conjunto formado pelo sistema a ser controlado e o controlador.
+
+Sistemas de Controle                                                                       1
+•     Sistema de Controle em Malha Aberta
+
+        É aquele em que a saída ou resposta não possui nenhuma influência sobre a entrada.
+
+                                         Sinal de Controle
+           Resposta Desejada          (Variável Manipulada)         Saída
+        (Referência ou Set-Point)               MV          (Variável de Processo)
+                   SP             Controlador        Planta           PV
+
+•     Sistema de Controle em Malha Fechada
+
+        É aquele em que a saída ou resposta influencia a entrada do sistema.
+
+                                        Sinal de Controle
+       Resposta Desejada Comparação (Variável Manipulada)          Saída
+    (Referência ou Set-Point) +                MV          (Variável de Processo)
+               SP                Controlador        Planta           PV
+                               -
+                                                    Sensor +
+                                                   Transmissor
+
+1.2    Exemplos
+
+      Ser humano tentando pegar um objeto
+
+                  Posição do                                                Posição
+                   Objeto +Olhos                                            da Mão
+                                             Cérebro              Braço
+                               -                                  e Mão
+                                        Controlador             Sistema
+
+
+      Controle de temperatura de uma sala
+
+              Temperatura                                                   Temperatura
+               Desejada Termostato
+                           +               Ar
+                                                                             Ambiente
+                                                                   Sala
+                               -       Condicionado
+                                        Controlador             Sistema
+
+
+      Controle do nível de um reservatório
+
+                 Nivel                                                       Nível de
+                Desejado +                                                    Água
+                                      Bomba                   Reservatório
+                           -
+                                     Controlador                  Sistema
+
+
+                                                       Bóia
+                                                       Sensor
+
+
+
+
+2                                                                              Sistemas de Controle
+1.3   Formulação Geral do Problema de Controle
+
+     Um problema de controle consiste em determinar uma forma de afetar um dado sistema
+físico de modo que seu comportamento atenda às especificações de desempenho previamente
+estabelecidas.
+    Como, normalmente, não é possível alterar a estrutura funcional do sistema físico em
+questão, a satisfação das especificações de desempenho é atingida mediante o projeto e
+implementação de controladores (compensadores).
+
+
+                                                      U = Universo
+
+                                                Entradas Manipuladas
+                                  Sistema                u( t )
+                                   Físico
+                                                        Entradas
+                                                        Exógenas
+                                                          w(t)
+                                                                             Meio
+                                                                            Ambiente
+                                                Saídas Observadas
+                                                       y(t)
+
+
+                                                     Saídas de Interesse
+                                                             z(t)
+
+
+
+
+                                                                           Especificações de
+                                                                             Desempenho
+                                                                                    ||
+                        Modelos                                                Velocidade
+                               ||                                              Segurança
+          Quantitativos (Ex.: Modelos Matemáticos)                              Conforto
+                              ou                                                 Custo
+           Qualitativos (Ex.: Modelos em Escala)                              Durabilidade
+                                                                                    .
+                                                                                    .
+                                                                                    .
+
+
+
+                        Análise                  Projeto                   Implementação
+
+
+
+
+Sistemas de Controle                                                                           3
+2     MÉTODO DO LUGAR GEOMÉTRICO DAS RAÍZES (LGR)
+
+2.1    Introdução
+
+     O diagrama do LGR consiste em um conjunto de curvas no plano complexo s, onde estas
+curvas representam as posições admissíveis para os pólos de malha fechada de um dado
+sistema quando o seu ganho varia de zero a infinito.
+
+      Considere o seguinte sistema:
+
+            R(s) +                      C(s)
+                               G(s)                                        C(s)     G(s)
+                                                              G MF (s) =        =
+                 -                                                         R(s) 1 + G(s)H(s)
+
+
+      Os pólos de malha fechada são as raízes do polinômio característico:
+
+                                       1 + G(s)H(s) = 0
+
+                                               ⇓
+
+                                         G(s)H(s) = −1
+
+     Como G(s)H(s) representa uma quantidade complexa, a igualdade acima precisa ser
+desmembrada em duas equações, as quais nos fornecem as seguintes condição para a
+localização dos pólos no plano s:
+
+      Condição de Módulo:
+
+                                         G(s)H(s) = 1                                      ( 2.1 )
+
+
+      Condição de ângulo:
+
+                             ∠G(s)H(s) = ± 180(2k + 1) k = 0,1,...                         ( 2.2 )
+
+                            Ponto de
+                             Teste                      p1   Im
+                               si
+
+
+
+
+                                 z1                               Re
+
+
+
+                                                     p2
+
+
+
+
+4                                                                           Sistemas de Controle
+    Ex:
+
+
+
+          R(s) +                   K           C(s)
+                                                                             C(s)     K
+                              s(s+4)                                              = 2
+                  -                                                          R(s) s + 4s + K
+
+
+    Os pólos de malha fechada são as raízes da eq. característica ⇒                s 2 + 4s + K = 0
+
+                                                                 p1 = −2 + 4 − K
+                         − 4 ± 16 − 4K                           
+                      s=               = −2 ± 4 − K              
+                               2                                 
+                                                                 p 2 = −2 − 4 − K
+
+
+
+    Variando K temos a seguinte tabela de pólos de malha fechada:
+
+                              K                         p1              p2
+
+                               0                         0              -4
+
+                               1                      -0,27            -3,73
+
+                               2                      -0,59            -3,41
+
+                               4                      -2,00            -2,00
+
+                               5                -2,00 + j 1,00    -2,00 - j 1,00
+
+                               8                -2,00 + j 2,00    -2,00 - j 2,00
+
+
+
+                                       Ponto de
+                  K→∞        Im                                                 G(s)H(s) = 1 ⇒
+                                        Teste                     Im
+                                          si
+                                                                                     K
+                                                                                          =1
+                                                                                    A1A 2
+    K=0                      K=0
+
+  - τ1        1
+           - 2τ              Re
+     1        1                         - τ1             1
+                                                      - 2τ        Re
+                                           1             1
+                                                                       ∠G(s)H(s) = ± 180 o (2k + 1) ⇒
+
+                  K→∞                                                            θ1 + θ 2 = 180 o
+
+
+
+
+Sistemas de Controle                                                                                  5
+2.2   Passos para a Construção do LGR
+
+1. Escrever o polinômio característico do
+   modo que o parâmetro de interesse (K)                  p.ex.: 1 + G(s)H(s) = 1 + KP(s)
+   apareça claramente:
+                                                                                nZ
+
+
+2. Fatorar o polinômio P(s) em termos dos nP
+                                                                                ∏ (s + z ) i
+                                                         1 + G(s)H(s) = 1 + K   i =1
+                                                                                nP
+
+                                                                                ∏ (s + p )
+   pólos e nZ zeros.
+                                                                                            j
+                                                                                j =1
+
+
+3. Assinalar os pólos e zeros de malha aberta        X = Pólos e O = Zeros.
+   no    plano    s    com     os   símbolos O LGR começa nos pólos e termina nos
+   correspondentes.                           zeros.
+
+4. Assinalar os segmentos do eixo real que são      O LGR se situa à esquerda de um número
+   LGR.                                                     ímpar de pólos e zeros
+
+5. Determinar o número de lugares separados,                 LS = nP, quando np ≥ nZ;
+   LS (seguimentos de curva que compõe o                   nP = Número de pólos finitos
+   LGR).                                                   nZ = Número de zeros finitos
+
+6. O LGR é simétrico com relação ao eixo real Basta desenhar a parte acima do eixo real e
+   (eixo horizontal)                                  depois espelhar o esboço.
+
+
+7. (nP - nZ) seguimentos de um LGR                      σA =
+                                                               ∑ (− p j ) − ∑ (− z i )
+                                                                        nP − nz
+   prosseguem em direção aos zeros infinitos
+   ao longo de assíntotas centralizadas em σA e
+   com ângulos φA.                              φA =
+                                                     (2q + 1) 180 o , q = 0,1,2,..., (n − n − 1)
+                                                                                       P   z
+                                                     nP − n z
+
+                                                                1º Fazer K = p(s);
+8. Determinar o ponto de saída (se existir)
+   sobre o eixo real.                                                                  dp(s)
+                                                      2º Determinar as raízes de             = 0.
+                                                                                        ds
+
+9. Utilizando o critério de Routh-Hurwirtz,
+                                                          Ver critério de estabilidade de
+   determinar o ponto no qual o eixo
+                                                                 Routh-Hurwirtz.
+   imaginário é cruzado (se isso ocorrer).
+
+                                                 Ângulo de Partida = 180° - (∑θi) + (∑φj)
+10. Usando a condição de ângulo, determinar o
+    ângulo de partida para os pólos complexos e Ângulo de Chegada = 180° - (∑φi) + (∑θj)
+    o ângulo de chegada para os zeros onde:
+    complexos.                                        θi = ângulos de vetores partindo dos
+                                                demais pólos até o pólo em questão.
+      ∠ P(s) = 180 o ± q360 o em s = pj ou zi.        φj = ângulos de vetores partindo dos
+                                                demais zeros até o pólo em questão
+
+
+
+6                                                                        Sistemas de Controle
+•   Exemplo 1: Sistema com 2 pólos e 1 zero reais
+
+
+    Considere o seguinte sistema:
+
+         R(s) +               s+2      C(s)
+                       K                                                            K (s + 2)
+                             s(s+4)                            1 + G(s)H(s) = 1 +
+              -                                                                     s 2 + 4s
+
+
+
+
+1. Escrever o polinômio característico do                                 K (s + 2)
+   modo que o parâmetro de interesse (K)             1 + G(s)H(s) = 1 +             = 1 + KP(s)
+   apareça claramente:                                                    s 2 + 4s
+
+                                                                     K (s + 2)
+                                                      1 + G(s)H(s) =            ⇒
+2. Fatorar o polinômio P(s) em termos dos nP                          s 2 + 4s
+   pólos e nZ zeros.                                            (s + 2)
+                                                      ⇒ P(s) =             (forma fatorada )
+                                                               s(s + 4)
+
+                                                        Lugar Geométrico das Raízes
+                                                                  (LGR)                         Im
+                                                                                                     0.2
+3. Assinalar os pólos e zeros de malha aberta
+   no plano s com os símbolos
+                                                                                                     0.1
+   correspondentes:
+
+                                                                                                  Re
+                                                -5       -4       -3        -2       -1           0
+           X = Pólos e O = Zeros.
+O LGR começa nos pólos e termina nos                                                             -0.1
+zeros.
+
+                                                                                                 -0.2
+
+                                                        Lugar Geométrico das Raízes
+                                                                  (LGR)                         Im
+                                                                                                     0.2
+                                                              Total de
+4. Assinalar os segmentos do eixo real que                 2 pólos e zeros
+                                                                                                     0.1
+   são LGR.                                                   (nº Par)
+
+                                                                                                  Re
+                                                -5       -4       -3        -2       -1           0
+O LGR se situa à esquerda de um número
+        ímpar de pólos e zeros.                     Total de                                     -0.1
+                                                                             Total de
+                                                 3 pólos e zeros
+                                                                          1 pólos e zeros
+                                                   (nº Impar)
+                                                                            (nº Impar)           -0.2
+
+
+
+
+Sistemas de Controle                                                                                 7
+•   Exemplo 2: Sistema com 4 pólos e 1 zero reais
+
+    Considere agora o seguinte sistema:
+
+     R(s) +                K           C(s)
+                      (s+2)(s+4)
+          -                                                                     K (s + 1)
+                                                 1 + G(s)H(s) = 1 +
+                         (s+1)                                           s + 10 s 3 + 32 s 2 + 32 s
+                                                                           4
+
+
+                        s(s+4)
+
+
+
+
+1. Escrever o polinômio característico do                                   s +1
+   modo que o parâmetro de interesse (K)         1 + KP(s) = 1 + K 4
+   apareça claramente:                                            s + 10 s + 32 s 2 + 32 s
+                                                                          3
+
+
+
+
+2. Fatorar o polinômio P(s) em termos dos                                   (s + 1)
+                                                             P(s) =
+   nP pólos e nZ zeros.                                                s(s + 2)(s + 4) 2
+
+                                                                                                 Im
+                                                                                                       5
+3. Assinalar os pólos e zeros de malha           Pólo com
+   aberta no plano s com os símbolos           multiplicidade 2
+   correspondentes:
+                                                                                                       Re
+                                                -5     -4         -3           -2         -1          0
+              X = Pólos e O = Zeros.
+O LGR começa nos pólos e termina nos
+zeros.
+                                                                                                       -5
+
+                                                                                                  Im
+                                                          Trecho entre                                    5
+                                                            2 pólos                    Total de
+                                                 Pólo com                           2 pólos e zeros
+4. Assinalar os segmentos do eixo real que                                             (nº Par)
+   são LGR.                                    multiplicidade 2
+                                                                                                       Re
+                                                -5      -4        -3            -2         -1         0
+O LGR se situa à esquerda de um número                    Total de
+        ímpar de pólos e zeros.                        3 pólos e zeros
+                                                         (nº Impar)     Total de
+                                                                     1 pólos e zeros
+                                                                       (nº Impar)                         -5
+
+5. Determinar o nº de lugares separados,
+                                                                  LS = nP = 4
+         LS = nP, quando np ≥ nZ;
+
+6. LGR é simétrico em relação ao eixo real .
+
+
+8                                                                              Sistemas de Controle
+7. (nP - nZ) seguimentos de um LGR
+   prosseguem em direção aos zeros
+   infinitos ao longo de assíntotas
+                                                                                             Im
+   centralizadas em σA e com ângulos φA.                                                          5
+
+
+           σA =
+                  ∑ (− p ) − ∑ (− z )
+                          j           i
+                                                                       180º
+
+                         nP − nz
+
+ φA =
+        (2q + 1) 180 o , q = 0,1,2,..., (n − n − 1)                                   60º
+                                                                                                  Re
+                                          P   z
+        nP − nz                                        -5     -4    σA= -3       -2     -1    0
+
+           (−2) + 2(−4) − (−1) − 9                                     300º
+    σA =                        =       = −3
+                     4 −1          3
+   φA =
+         (2q + 1)180 o φ A = 60 o ; q = 0
+                                                                                                 -5
+           4 −1         ⇒ φ A = 180 o ; q = 1
+                          
+    (n P − n z − 1) = 2 φ A = 300 ; q = 2
+                                     o
+
+
+
+
+8. Determinar o ponto de saída (se existir)
+   sobre o eixo real.
+
+            1º Fazer K = p(s);
+                                                                                             Im
+                              dp(s)                                                               5
+   2º Determinar as raízes de       = 0.
+                               ds                     dp(s) = 0 ⇒ s = -2,5994
+                                                        ds
+                                 s +1                 (Pto. de saída sobre Re)
+ 1 + KP(s) = 1 + K 4                            ⇒
+                     s + 10 s + 32 s 2 + 32 s
+                               3
+
+                                                                                                  Re
+                   s 4 + 10 s 3 + 32 s 2 + 32 s
+ ⇒ p(s) = K = −                                 ⇒      -5      -4       -3       -2     -1        0
+                               s +1
+     dp(s)     3s 4 + 24 s 3 + 62 s 2 + 64 s + 32
+ ⇒         =−
+      ds                      (s + 1)2
+logo:
+                                                                                                  -5
+           dp(s)
+                  = 0 ⇒ s = −2,5994
+            ds
+
+
+
+
+Sistemas de Controle                                                                                  9
+•    Exemplo 3: Sistema com 2 pólos reais e 2 pólos complexos
+
+     Ex.: Considere agora o seguinte sistema:
+
+     R(s) +                K           C(s)
+                       2
+           -       s ( s + 8s + 32 )                                                K
+                                                 1 + G(s)H(s) = 1 +
+                           1                                              s + 12 s + 64 s 2 + 128 s
+                                                                             4           3
+
+
+                       (s+4)
+
+
+
+
+1. Escrever o polinômio característico do                                         1
+   modo que o parâmetro de interesse (K)        1 + KP(s) = 1 + K
+   apareça claramente:                                                  s + 12 s + 64 s 2 + 128 s
+                                                                         4           3
+
+
+
+
+2. Fatorar o polinômio P(s) em termos dos                                     1
+                                                      P(s) =
+   nP pólos e nZ zeros.                                        s(s + 4)(s + 4 + 4i )(s + 4 − 4i )
+
+                                                                                                10
+
+3. Assinalar os pólos e zeros de malha
+   aberta no plano s com os símbolos                                                                5
+   correspondentes:
+
+                                                -10      -8        -6        -4          -2     0        2
+           X = Pólos e O = Zeros.
+O LGR começa nos pólos e termina nos                                                             -5
+zeros.
+                                                                                                -10
+
+                                                                                              Im 10
+                                                                                Total de
+                                                                             2 pólos e zeros
+4. Assinalar os segmentos do eixo real que                                      (nº Par)            5
+   são LGR.
+                                                                                                        Re
+                                                -10      -8        -6        -4          -2     0        2
+
+O LGR se situa à esquerda de um número
+                                                                                                 -5
+        ímpar de pólos e zeros.                                            Total de
+                                                                        1 pólos e zeros
+                                                                          (nº Impar)            -10
+
+5. Determinar o nº de lugares separados,                            LS = nP = 4
+
+6. LGR é simétrico em relação ao eixo real .
+
+
+
+
+10                                                                                Sistemas de Controle
+7. (nP - nZ) seguimentos de um LGR
+   prosseguem em direção aos zeros
+   infinitos ao longo de assíntotas                                                                   10
+   centralizadas em σA e com ângulos φA.                                              135º
+
+        (0) + (−4) + (−4) + (−4) − 12                                                                     5
+ σA =                           =     = −3
+                    4             4                                                                       45º
+                                                                        225º
+                                                   -10        -8        -6          -4 -3 -2          0         2
+                          φ A = 45 o ; q = 0
+   φA =
+         (2q + 1)
+                   180 o                                                               ||
+                                                                                           315º
+                          φ A = 135 ; q = 1
+                                      o
+             4                                                                         σA              -5
+                         ⇒
+                          φ A = 225 ; q = 2
+                                      o
+
+    (n P − n z − 1) = 3 φ = 315 o ; q = 3
+                           A                                                                         -10
+
+8. Determinar o ponto de saída (se existir)
+   sobre o eixo real.
+
+            1º Fazer K = p(s);                                                 (-1,5767; 83,5704)             p(s)
+                              dp(s)                                                                           80
+   2º Determinar as raízes de       = 0.
+                               ds
+                                                                                                              60
+                                1
+1 + KP(s) = 1 + K 4                           ⇒
+                   s + 12 s + 64 s 2 + 128 s
+                             3
+                                                                                                              40
+ ⇒ p(s) = K = −s 4 + 12 s 3 + 64 s 2 + 128 s ⇒
+    dp(s)
+ ⇒        = −4 s 3 − 36 s 2 − 128 s - 128                                                                     20
+      ds
+logo:
+           dp(s)                                  -4           -3              -2            -1               0 s
+                  = 0 ⇒ s = −1,5767
+            ds
+
+9. Utilizando o critério de Routh-Hurwirtz,               s4          1             64            K
+   determinar o ponto no qual o eixo real é               s3         12             128
+   cruzado (se isso ocorrer).                             s2         b1              K
+                                                          s1         c1
+O polinômio característico é:                             s0         K
+
+      s 4 + 12 s 3 + 64 s 2 + 128 s + K = 0                          12(64) − 128
+                                                              b1 =                = 53,3333
+                                                                         12
+A partir do critério de Routh-Hurwirtz,
+determinamos o polinômio auxiliar:                            b1 (128) − 12(K )
+                                                       c1 =                     = 128 − 0,2250K
+                                                                     b1
+          53,3334 s 2 + 568,8889 = 0
+                                                  Logo, o limite de ganho para estabilidade é:
+cujo as raízes determinam os pontos onde o
+LGR cruza o eixo imaginário.                                             128
+                                                                   K=          = 568,8889
+                                                                        0,2250
+               s1,2 = ± 3,2660 i
+
+
+
+
+Sistemas de Controle                                                                                            11
+10. Usando a condição de ângulo, determinar                                                                              Im 10
+    o ângulo de partida para os pólos
+                                                                                                  θ1 = 225º
+    complexos e o ângulo de chegada para os
+                                                                                                                             5
+    zeros complexos.
+                                                                                                                           θ3 = 135º
+                                                                                                            90º
+      ∠ P(s) = 180 ± q360 em s = pj ou zi.
+                          o            o                                                                                       Re
+                                                                      -10     -8        -6        -4           -2          0     2
+Logo:                                                                                                       90º
+                                                                                                                            -5
+                                                                                    Por simetria
+      θ1 = 180 − (90 + 90 + 135 ) = 225
+                 o            o        o        o           o
+
+
+                                                                                                                           -10
+
+
+
+
+              dp(s) = 0 ⇒ s = -1,5767               10                                                                       10
+                ds
+              (Pto. de saída sobre Re)
+                                                        5                                                                        5
+
+                                                          ±3,2660 i
+                                                    0                   -10        -8        -6        -4           -2       0        2
+-10      -8          -6           -4       -2                   2
+
+                                                     -5                                                                          -5
+
+
+                                                                                                                             -10
+                                                    -10
+
+
+
+
+2.3     LGR para Funções de Transferência Típicas
+
+                              G(s)                                                            LGR
+
+                                                                                                                                 Im
+
+
+
+
+         K
+1.
+      s τ1 + 1                                                                                                                   Re
+                                                                                                        - τ1
+                                                                                                              1
+
+
+
+
+12                                                                                                     Sistemas de Controle
+                                                                              Im
+
+
+
+
+              K
+2.
+     (s τ1 + 1)(s τ 2 + 1)                                                    Re
+                                        - τ1             - τ1
+                                           1                 2
+
+
+
+
+                                                                              Im
+
+
+
+
+                    K
+3.
+     (s τ1 + 1)(s τ 2 + 1)(s τ 3 + 1)                 - τ1       - τ1   - τ1 Re
+                                                         3          2     1
+
+
+
+
+                                                                              Im
+
+
+
+
+     K
+4.
+     s                                                                         Re
+
+
+
+
+                                                                              Im
+
+
+
+
+         K
+5.
+     s(s τ1 + 1)                                                              Re
+                                               - τ1
+                                                  1
+
+
+
+
+Sistemas de Controle                                                               13
+
