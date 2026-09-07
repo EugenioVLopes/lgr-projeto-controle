@@ -21,6 +21,18 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks: (id: string) => {
+          if (id.includes("node_modules/katex")) return "katex";
+          if (id.includes("plotly.js-basic-dist-min")) return "plotly-basic";
+          return undefined;
+        },
+      },
+    },
+  },
   server: { host: true, port: 5173 },
   test: { environment: "node" },
 });

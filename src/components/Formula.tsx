@@ -1,7 +1,14 @@
-import { useMemo } from "react";
-import katex from "katex";
+import { useEffect, useState } from "react";
 import "katex/dist/katex.min.css";
 import type { Complex } from "../lib/lgr/index";
+
+let katexPromise: Promise<typeof import("katex")> | null = null;
+function carregarKatex(): Promise<typeof import("katex")> {
+  if (!katexPromise) {
+    katexPromise = import("katex");
+  }
+  return katexPromise;
+}
 
 export function polinomioParaLatex(
   coeficientes: readonly number[],
@@ -50,15 +57,30 @@ export default function Formula({
   id?: string;
   inline?: boolean;
 }) {
-  const html = useMemo(() => {
-    try {
-      return katex.renderToString(latex, {
-        throwOnError: false,
-        displayMode: display,
+  const [html, setHtml] = useState<string>(`<code>${latex}</code>`);
+  useEffect(() => {
+    let vivo = true;
+    carregarKatex()
+      .then((mod) => {
+        if (!vivo) return;
+        const katex = mod.default ?? mod;
+        try {
+          setHtml(
+            katex.renderToString(latex, {
+              throwOnError: false,
+              displayMode: display,
+            }),
+          );
+        } catch {
+          setHtml(`<code>${latex}</code>`);
+        }
+      })
+      .catch(() => {
+        if (vivo) setHtml(`<code>${latex}</code>`);
       });
-    } catch {
-      return `<code>${latex}</code>`;
-    }
+    return () => {
+      vivo = false;
+    };
   }, [latex, display]);
   if (inline) {
     return (
