@@ -15,6 +15,7 @@ import Passo12GanhoS0 from "./components/passos/Passo12GanhoS0";
 import LgrCompleto from "./components/passos/LgrCompleto";
 import { EXEMPLOS } from "./lib/examples";
 import { useCalculoLgr } from "./hooks/useCalculoLgr.ts";
+import { analisarCoeficientes } from "./lib/lgr/polinomios";
 
 export default function App() {
   const exemploInicial =
@@ -106,7 +107,14 @@ export default function App() {
           </div>
         ) : (
           <>
-            <Passo01Equacao num={calculoLgr.num} den={calculoLgr.den} />
+            <Passo01Equacao
+              numeradorG={analisarCoeficientes(numeradorG) ?? []}
+              denominadorG={analisarCoeficientes(denominadorG) ?? []}
+              numeradorH={analisarCoeficientes(numeradorH) ?? []}
+              denominadorH={analisarCoeficientes(denominadorH) ?? []}
+              num={calculoLgr.num}
+              den={calculoLgr.den}
+            />
             <Passo02FormaFatorada num={calculoLgr.num} den={calculoLgr.den} />
             <Passo03PolosZeros
               polos={calculoLgr.polos}
