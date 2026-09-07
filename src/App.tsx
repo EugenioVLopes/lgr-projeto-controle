@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useValorComDebounce } from "./hooks/useValorComDebounce.ts";
 import LgrPlot, { type Trace } from "./components/LgrPlot";
 import DicaProva from "./components/DicaProva";
 import Formula, {
@@ -34,15 +35,6 @@ import type {
   Cruzamento,
   TesteAngulo,
 } from "./lib/lgr/index";
-
-function useValorComDebounce<T>(valor: T, atraso = 300): T {
-  const [debounced, setDebounced] = useState(valor);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(valor), atraso);
-    return () => clearTimeout(t);
-  }, [valor, atraso]);
-  return debounced;
-}
 
 type CalcErro = { error: string };
 type CalcOk = {
