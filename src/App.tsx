@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import LgrPlot, { type Trace } from './components/LgrPlot'
-import Formula, { polinomioParaLatex } from './components/Formula'
+import Formula, { polinomioParaLatex, complexoParaLatex } from './components/Formula'
 import { EXEMPLOS } from './lib/examples'
 import {
   criarComplexo, encontrarPontosBreakaway, encontrarSegmentosEixoReal, calcularAnguloPartida, calcularAssintotas,
@@ -116,18 +116,37 @@ export default function App() {
           </select>
           <div className="grid2">
             <fieldset><legend>G(s), malha direta</legend>
+              {(() => {
+                const pNG = analisarCoeficientes(nG)
+                const pDG = analisarCoeficientes(dG)
+                if (!pNG || !pDG) return null
+                return <Formula latex={`G(s) = \\frac{${polinomioParaLatex(pNG)}}{${polinomioParaLatex(pDG)}}`} descricao="G de s" />
+              })()}
               <div><label htmlFor="num-g">Numerador G(s)</label><input id="num-g" value={nG} onChange={(e) => setNG(e.target.value)} inputMode="decimal" autoComplete="off" aria-invalid={calc.error !== null} aria-describedby="erro-coefs ajuda-coefs" /></div>
               <div><label htmlFor="den-g">Denominador G(s)</label><input id="den-g" value={dG} onChange={(e) => setDG(e.target.value)} inputMode="decimal" autoComplete="off" aria-invalid={calc.error !== null} aria-describedby="erro-coefs ajuda-coefs" /></div>
             </fieldset>
             <fieldset><legend>H(s), realimentação</legend>
+              {(() => {
+                const pNH = analisarCoeficientes(nH)
+                const pDH = analisarCoeficientes(dH)
+                if (!pNH || !pDH) return null
+                return <Formula latex={`H(s) = \\frac{${polinomioParaLatex(pNH)}}{${polinomioParaLatex(pDH)}}`} descricao="H de s" />
+              })()}
               <div><label htmlFor="num-h">Numerador H(s)</label><input id="num-h" value={nH} onChange={(e) => setNH(e.target.value)} inputMode="decimal" autoComplete="off" aria-invalid={calc.error !== null} aria-describedby="erro-coefs ajuda-coefs" /></div>
               <div><label htmlFor="den-h">Denominador H(s)</label><input id="den-h" value={dH} onChange={(e) => setDH(e.target.value)} inputMode="decimal" autoComplete="off" aria-invalid={calc.error !== null} aria-describedby="erro-coefs ajuda-coefs" /></div>
             </fieldset>
-            <fieldset><legend>Ponto de teste s0</legend>
+          </div>
+          <fieldset><legend>Ponto de teste s0</legend>
+            {(() => {
+              const s0 = criarComplexo(Number(sr) || 0, Number(si) || 0)
+              const parte = complexoParaLatex(s0)
+              return <Formula latex={`s_0 = ${parte}`} descricao={`Ponto de teste s0 igual a ${parte}`} />
+            })()}
+            <div className="grid2">
               <div><label htmlFor="re-s0">Teste Re(s0)</label><input id="re-s0" value={sr} onChange={(e) => setSr(e.target.value)} inputMode="decimal" autoComplete="off" aria-invalid={calc.error !== null} aria-describedby="erro-coefs ajuda-coefs" /></div>
               <div><label htmlFor="im-s0">Teste Im(s0)</label><input id="im-s0" value={si} onChange={(e) => setSi(e.target.value)} inputMode="decimal" autoComplete="off" aria-invalid={calc.error !== null} aria-describedby="erro-coefs ajuda-coefs" /></div>
-            </fieldset>
-          </div>
+            </div>
+          </fieldset>
           <p id="ajuda-coefs" className="ajuda">Coefs em ordem decrescente de s, separados por espaço. Ex.: s²+13s → "1 13 0".</p>
         </div>
 
@@ -145,21 +164,23 @@ export default function App() {
                 { x: calc.polos.map((p) => p.re), y: calc.polos.map((p) => p.im), mode: 'markers', name: 'polos', marker: { symbol: 'x', size: 11, color: corPolo } },
                 { x: calc.zeros.map((z) => z.re), y: calc.zeros.map((z) => z.im), mode: 'markers', name: 'zeros', marker: { symbol: 'circle-open', size: 10, color: corZero } },
               ]} />
-              <div className="mono" id="desc-polos">polos: {calc.polos.map(formatarComplexo).join(' · ')}</div>
-              <div className="mono">zeros: {calc.zeros.length ? calc.zeros.map(formatarComplexo).join(' · ') : 'nenhum finito'}</div>
+              <Formula id="desc-polos" latex={calc.polos.map((p, i) => `p_{${i + 1}} = ${complexoParaLatex(p)}`).join(',\\quad ')} descricao={`Polos: ${calc.polos.map(formatarComplexo).join('; ')}`} />
+              {calc.zeros.length ? (
+                <Formula latex={calc.zeros.map((z, i) => `z_{${i + 1}} = ${complexoParaLatex(z)}`).join(',\\quad ')} descricao={`Zeros: ${calc.zeros.map(formatarComplexo).join('; ')}`} />
+              ) : <p>nenhum finito</p>}
             </details>
             <details><summary>Passo 4, segmentos eixo real</summary>
               <div className="mono">{calc.segs.length ? calc.segs.map(([a, b]) => `[${a === -Infinity ? '-∞' : a.toFixed(4)}, ${b.toFixed(4)}]`).join('  ') : 'nenhum segmento'}</div>
             </details>
             <details><summary>Passo 5, lugares separados</summary>
-              <div className="mono">Ls = max(np,nz) = max({calc.polos.length},{calc.zeros.length}) = {Math.max(calc.polos.length, calc.zeros.length)}</div>
+              <Formula latex={`L_s = \\max(n_p,n_z) = \\max(${calc.polos.length},${calc.zeros.length}) = ${Math.max(calc.polos.length, calc.zeros.length)}`} descricao={`Número de lugares separados igual a ${Math.max(calc.polos.length, calc.zeros.length)}`} />
             </details>
             <details><summary>Passo 6, simetria</summary><p>Simétrico ao eixo real (pares conjugados).</p></details>
             <details open><summary>Passo 7, assíntotas</summary>
               {calc.sigma === null ? <p>np ≤ nz → sem assíntotas.</p> : (() => {
                 const sig: number = calc.sigma
                 return (
-                  <><div className="mono" id="desc-assintotas">na={calc.polos.length - calc.zeros.length}, σa={sig.toFixed(4)}, φ={calc.angs.map((a) => a.toFixed(1) + '°').join(', ')}</div>
+                  <><Formula id="desc-assintotas" latex={`n_a = ${calc.polos.length - calc.zeros.length},\\quad \\sigma_a = ${sig.toFixed(4)},\\quad \\phi = ${calc.angs.map((a) => `${a.toFixed(1)}^{\\circ}`).join(',\\;')}`} descricao={`Assíntotas com sigma a ${sig.toFixed(4)}`} />
                     <LgrPlot title="Assíntotas" descritoPor="desc-assintotas" tema={tema} traces={[
                       { x: calc.polos.map((p) => p.re), y: calc.polos.map((p) => p.im), mode: 'markers', name: 'polos', marker: { color: corPolo, symbol: 'x', size: 10 } },
                       ...calc.angs.map((a, i) => {
@@ -172,15 +193,30 @@ export default function App() {
               })()}
             </details>
             <details><summary>Passo 8, breakaway/break-in (dK/ds=0)</summary>
-              <div className="mono">{calc.bk.length ? calc.bk.map((b) => `s=${formatarComplexo(b.s)} K=${b.K.toFixed(4)}`).join('\n') : 'nenhum ponto válido com K>0 no LGR'}</div>
+              {calc.bk.length ? (
+                <Formula latex={calc.bk.map((b) => `s = ${complexoParaLatex(b.s)},\\; K = ${b.K.toFixed(4)}`).join(',\\quad ')} descricao="Pontos de breakaway com ganho K" />
+              ) : <p>nenhum ponto válido com K&gt;0 no LGR</p>}
             </details>
             <details><summary>Passo 9, cruzamento eixo imaginário (Routh + s=jω)</summary>
               <Formula latex={`\\mathrm{cross}(\\omega) = ${polinomioParaLatex(calc.info.cross, '\\omega')} = 0`} descricao="Polinômio de cruzamento em ômega igual a zero" />
-              <div className="mono">{calc.cruzs.length ? calc.cruzs.map((c) => `ω=${c.w.toFixed(4)} K=${c.K.toFixed(4)} s=±${c.w.toFixed(4)}j`).join('\n') : 'não cruza p/ K>0'}</div>
-              <div className="mono">Routh K=1, 1ª coluna: {calc.routh0.map((r) => r[0].toFixed(3)).join(' | ')}</div>
+              {calc.cruzs.length ? (
+                <Formula latex={calc.cruzs.map((c) => `\\omega = ${c.w.toFixed(4)},\\; K = ${c.K.toFixed(4)},\\; s = \\pm ${c.w.toFixed(4)}j`).join(',\\quad ')} descricao="Cruzamentos do eixo imaginário com ganho K" />
+              ) : <p>não cruza para <Formula inline latex="K > 0" descricao="K maior que zero" /></p>}
+              <Formula display latex={(() => {
+                const linhas = calc.routh0
+                const cols = Math.max(...linhas.map((r) => r.length))
+                const corpo = linhas.map((r) => {
+                  const cels = r.map((v) => v.toFixed(3))
+                  while (cels.length < cols) cels.push('')
+                  return cels.join(' & ')
+                }).join('\\\\')
+                return `\\begin{array}{${'c'.repeat(cols)}}${corpo}\\end{array}`
+              })()} descricao={`Tabela de Routh para K igual a 1, primeira coluna: ${calc.routh0.map((r) => r[0].toFixed(3)).join(', ')}`} />
             </details>
             <details><summary>Passo 10, ângulos partida/chegada</summary>
-              <div className="mono">{calc.partidas.length ? calc.partidas.map((p) => `p=${formatarComplexo(p.p)} θd=${p.ang.toFixed(2)}°`).join('\n') : 'sem polos complexos, não se aplica (' + calc.polos.filter((p) => !ehNumeroReal(p)).length + ' complexos)'}</div>
+              {calc.partidas.length ? (
+                <Formula latex={calc.partidas.map((p) => `p = ${complexoParaLatex(p.p)},\\; \\theta_d = ${p.ang.toFixed(2)}^{\\circ}`).join(',\\quad ')} descricao="Ângulos de partida dos polos complexos" />
+              ) : <p>sem polos complexos, não se aplica ({calc.polos.filter((p) => !ehNumeroReal(p)).length} complexos)</p>}
             </details>
             <details open><summary>Passo 11, critério do ângulo em s0={formatarComplexo(calc.s0)}</summary>
               <p className={calc.t.pertence ? 'badge-ok' : 'badge-warn'}>{calc.t.pertence ? 'PERTENCE ao LGR' : 'NÃO pertence'} (∠={calc.t.norm.toFixed(2)}°, alvo ±180°)</p>
@@ -188,7 +224,7 @@ export default function App() {
                 { x: calc.polos.map((p) => p.re), y: calc.polos.map((p) => p.im), mode: 'markers', name: 'polos', marker: { color: corPolo, symbol: 'x', size: 10 } },
                 { x: [calc.s0.re], y: [calc.s0.im], mode: 'markers', name: 's0', marker: { color: calc.t.pertence ? corZero : corPolo, size: 13, symbol: 'star' } },
               ]} />
-              <div className="mono" id="desc-s0">s0={formatarComplexo(calc.s0)} ∠={calc.t.norm.toFixed(2)}°</div>
+              <Formula id="desc-s0" latex={`s_0 = ${complexoParaLatex(calc.s0)},\\quad \\angle P(s_0) = ${calc.t.norm.toFixed(2)}^{\\circ}`} descricao={`Ponto s0 com ângulo ${calc.t.norm.toFixed(2)} graus`} />
             </details>
             <details open><summary>Passo 12, K em s0</summary>
               <Formula latex={`K = \\frac{\\prod|s_0-p_i|}{\\prod|s_0-z_i|} = ${Number.isFinite(calc.K) ? calc.K.toFixed(6) : '\\infty'}`} descricao={`Ganho K igual a ${Number.isFinite(calc.K) ? calc.K.toFixed(6) : 'infinito'}`} />
