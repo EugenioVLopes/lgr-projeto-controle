@@ -159,7 +159,9 @@ export default function Passo10Partida({
                 </p>
                 <p>Ângulos dos outros polos:</p>
                 {det.parcelasPolos.length === 0 && (
-                  <p className="mono">nenhum outro polo</p>
+                  <p>
+                    <em>nenhum outro polo</em>
+                  </p>
                 )}
                 {det.parcelasPolos.map((x, j) => (
                   <Formula

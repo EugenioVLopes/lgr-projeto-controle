@@ -69,6 +69,7 @@ export default function LgrPlot({
         if (!montado) return;
         const cores = coresDoTema(tema);
         const layout: Partial<Layout> = {
+          autosize: true,
           title: { text: title, font: { size: 14, color: cores.ink } },
           paper_bgcolor: cores.surface,
           plot_bgcolor: cores.surface,

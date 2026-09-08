@@ -113,9 +113,9 @@ export default function Passo07Assintotas({
         latex={"\\sigma_a = \\frac{S_p - S_z}{n_p - n_z}"}
         descricao="Formula do centroide: Sp menos Sz sobre np menos nz"
       />
-      <p className="mono">
+      <p className="ajuda">
         Sp = soma das partes reais dos polos, Sz = soma das partes reais dos
-        zeros (ver linhas abaixo)
+        zeros (ver linhas abaixo).
       </p>
       <p>Soma das partes reais dos polos:</p>
       <Formula

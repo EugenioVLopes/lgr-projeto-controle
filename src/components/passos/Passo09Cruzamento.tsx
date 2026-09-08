@@ -112,7 +112,7 @@ export default function Passo09Cruzamento({
     <details open>
       <summary>Passo 9, cruzamento com o eixo imaginário</summary>
       <p>
-        <strong>Tabela de Routh-Hurwitz:</strong>
+        <strong>1) Tabela de Routh-Hurwitz:</strong>
       </p>
       <p>A partir da equação característica D(s) + K ⋅ N(s) = 0:</p>
       <Formula
@@ -145,17 +145,17 @@ export default function Passo09Cruzamento({
           ))}
         </>
       )}
-      <p className="mono">
+      <p className="ajuda">
         Referência numérica (K=1): primeira coluna{" "}
-        {routh0.map((r) => r[0].toFixed(3)).join(", ")}
+        {routh0.map((r) => r[0].toFixed(3)).join(", ")}.
       </p>
       {latexRouthNum && (
         <Formula display latex={latexRouthNum} descricao="Routh numerico K=1" />
       )}
       <hr />
       <p>
-        <strong>Método alternativo:</strong> substituindo s = jω e separando
-        partes real e imaginária:
+        <strong>2) Método alternativo (s = jω):</strong> substituindo s = jω e
+        separando partes real e imaginária:
       </p>
       <Formula
         latex={`\\text{Re}_D(\\omega) = ${polinomioParaLatex(reD, "\\omega")}`}
@@ -219,6 +219,9 @@ export default function Passo09Cruzamento({
         </p>
       )}
       <hr />
+      <p>
+        <strong>3) Gráfico e resumo:</strong>
+      </p>
       <LgrPlot
         title="LGR - Cruzamento com eixo imaginário"
         descritoPor="desc-cruz"
@@ -232,6 +235,13 @@ export default function Passo09Cruzamento({
               .join("; ")
           : "sem cruzamento"}
       </div>
+      {cruzs.length > 0 && (
+        <p className="badge-ok">
+          {cruzs.length === 1
+            ? "Cruzamento com o eixo imaginário encontrado."
+            : `${cruzs.length} cruzamentos com o eixo imaginário encontrados.`}
+        </p>
+      )}
       <DicaProva dica="monta D+K·N=0, separa Re e Im com s=jω. Resolve cross(ω)=0, pega ω>0. Acha K. No Routh, zera a primeira coluna para K crítico." />
     </details>
   );

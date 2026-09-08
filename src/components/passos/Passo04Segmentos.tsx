@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import LgrPlot, { type Trace } from "../LgrPlot";
 import Formula from "../Formula";
 import DicaProva from "../DicaProva";
-import { ehNumeroReal } from "../../lib/lgr/index";
 import type { Complex } from "../../lib/lgr/index";
 
 interface Props {
@@ -36,16 +35,6 @@ export default function Passo04Segmentos({
       }),
     [segs],
   );
-  const memoria = useMemo(() => {
-    const reais = [
-      ...polos.filter((p) => ehNumeroReal(p)),
-      ...zeros.filter((z) => ehNumeroReal(z)),
-    ]
-      .map((z) => z.re)
-      .sort((a, b) => b - a);
-    if (!reais.length) return "sem polos/zeros reais";
-    return `reais ordenados: ${reais.map((r) => r.toFixed(4)).join(", ")}`;
-  }, [polos, zeros]);
   const traces = useMemo<Trace[]>(() => {
     const xs = [...polos, ...zeros].map((p) => p.re);
     const baseMin = xs.length ? Math.min(...xs) : 0;
@@ -90,12 +79,26 @@ export default function Passo04Segmentos({
         tema={tema}
         traces={traces}
       />
-      <p id="desc-segs">
-        <strong>Regra:</strong> pertencem ao LGR os segmentos do eixo real à
+      <div className="mono" id="desc-segs">
+        {segs.length
+          ? segs
+              .map(([a, b]) =>
+                !Number.isFinite(a)
+                  ? `(-inf, ${b.toFixed(2)}]`
+                  : `[${a.toFixed(2)}, ${b.toFixed(2)}]`,
+              )
+              .join("; ")
+          : "sem segmentos no eixo real"}
+      </div>
+      <p>
+        <strong>1) Regra:</strong> pertencem ao LGR os segmentos do eixo real à
         esquerda de um número ímpar de polos e zeros reais.
       </p>
       {segs.length ? (
         <>
+          <p>
+            <strong>2) Segmentos encontrados:</strong>
+          </p>
           {listaSegs.map((s, i) => (
             <Formula
               key={i}
@@ -109,9 +112,6 @@ export default function Passo04Segmentos({
           <em>Nenhum segmento no eixo real pertence ao LGR.</em>
         </p>
       )}
-      <div className="memoria">
-        <div className="mono">{memoria}</div>
-      </div>
       <DicaProva dica="O LGR se situa à esquerda de um número ímpar de pólos e zeros: marca polos (x) e zeros (o) no eixo real e conta quantos há à direita do trecho." />
     </details>
   );

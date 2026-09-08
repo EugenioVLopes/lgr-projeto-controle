@@ -66,19 +66,17 @@ export default function Passo03PolosZeros({
         tema={tema}
         traces={traces}
       />
+      <div className="mono" id="desc-polos">
+        {polos.length} polos, {zeros.length} zeros
+      </div>
       <p>
-        <strong>Polos</strong> (n_p = {polos.length})
+        <strong>1) Polos</strong> (n_p = {polos.length})
       </p>
       {listaPolos.map((p, i) => (
-        <Formula
-          key={i}
-          id={i === 0 ? "desc-polos" : undefined}
-          latex={p.latex}
-          descricao={p.desc}
-        />
+        <Formula key={i} latex={p.latex} descricao={p.desc} />
       ))}
       <p>
-        <strong>Zeros</strong> (n_z = {zeros.length})
+        <strong>2) Zeros</strong> (n_z = {zeros.length})
       </p>
       {zeros.length ? (
         listaZeros.map((z, i) => (

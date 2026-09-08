@@ -305,6 +305,8 @@ summary {
   overflow-x: auto;
   margin: 8px 0;
   font-size: 1rem;
+  width: 100%;
+  max-width: none;
 }
 
 .formula .katex {
@@ -333,13 +335,23 @@ summary {
   padding: 8px;
   border-radius: 8px;
   overflow-x: auto;
-  max-width: 65ch;
+  width: 100%;
+  max-width: none;
+  margin: 8px 0;
 }
 
 .ajuda {
   font-size: 0.875rem;
   color: var(--muted);
-  max-width: 70ch;
+  width: 100%;
+  max-width: none;
+  margin: 8px 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
 }
 
 .badge-ok {
@@ -361,19 +373,6 @@ summary {
 .plot-carregando {
   font-size: 0.875rem;
   color: var(--muted);
-}
-
-.memoria {
-  margin: 8px 0;
-  border-left: 3px solid var(--field-border);
-  padding-left: 10px;
-}
-
-.memoria-titulo {
-  font-size: 0.81rem;
-  font-weight: 700;
-  color: var(--muted);
-  margin: 8px 0 4px;
 }
 
 .dica-prova {

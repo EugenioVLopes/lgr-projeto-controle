@@ -50,6 +50,9 @@ export default function Passo01Equacao({
   return (
     <details open>
       <summary>Passo 1, equação característica</summary>
+      <p>
+        <strong>1) Funções G(s) e H(s):</strong>
+      </p>
       <Formula
         latex={latexG}
         descricao="G(s) igual a K vezes numerador sobre denominador"
@@ -59,8 +62,15 @@ export default function Passo01Equacao({
         descricao="H(s) igual numerador sobre denominador"
       />
       <hr />
+      <p>
+        <strong>2) Malha aberta:</strong>
+      </p>
       <p>Função de transferência de malha aberta:</p>
       <Formula latex={latexGH} descricao="G(s)H(s) multiplicação de G com H" />
+      <hr />
+      <p>
+        <strong>3) Equação característica:</strong>
+      </p>
       <p>Equação característica:</p>
       <Formula
         latex={latexCaract}
