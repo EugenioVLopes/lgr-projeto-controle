@@ -196,10 +196,19 @@ export default function Passo09Cruzamento({
             latex={`b_1 = \\frac{(${dadosCubico.a2})(${dadosCubico.a1}) - (${dadosCubico.a3})(${dadosCubico.a0})}{${dadosCubico.a2}} = \\frac{${fmt(dadosCubico.q2)}K^2 ${dadosCubico.q1 >= 0 ? "+" : "-"} ${fmt(Math.abs(dadosCubico.q1))}K ${dadosCubico.q0 >= 0 ? "+" : "-"} ${fmt(Math.abs(dadosCubico.q0))}}{${dadosCubico.a2}} = 0`}
             descricao="b1 igual a zero"
           />
-          <Formula
-            latex={`K = \\begin{cases} ${dadosCubico.kCrit.map((k) => k.toFixed(4)).join(" \\\\\\\\ ")} \\end{cases}`}
-            descricao="K criticos"
-          />
+          {dadosCubico.kCrit.length > 0 ? (
+            <Formula
+              latex={`K = \\begin{cases} ${dadosCubico.kCrit.map((k) => k.toFixed(4)).join(" \\\\ ")} \\end{cases}`}
+              descricao="K criticos"
+            />
+          ) : (
+            <p>
+              <em>
+                Sem K critico maior que 0 (b1 igual a zero so em K menor ou
+                igual a 0, descartados). O LGR nao cruza o eixo imaginario.
+              </em>
+            </p>
+          )}
           <p>
             <strong>Polinômio auxiliar para cada K</strong> (linha s²):
           </p>
