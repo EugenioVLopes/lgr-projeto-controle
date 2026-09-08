@@ -25,86 +25,80 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
     if (!Number.isFinite(K)) return false;
     return true;
   }, [K]);
+  const prodA = prodP;
+  const prodB = prodZ;
+  const kCalc = prodB > 1e-12 ? prodA / prodB : Infinity;
   return (
     <details open>
-      <summary>Passo 12, cálculo de K</summary>
+      <summary>Passo 12, valor de K na raiz s0={formatarComplexo(s0)}</summary>
       <p>
-        <strong>Fórmula do critério de módulo:</strong>
+        <strong>Condição de módulo:</strong>
       </p>
       <Formula
-        latex={"K = \\frac{\\prod_{i} |s_0 - p_i|}{\\prod_{j} |s_0 - z_j|}"}
-        descricao="Formula do modulo"
+        latex={
+          "|KP(s)|_{s=s_i} = 1 \\Rightarrow K_i = \\frac{\\prod_{j=1}^{n_p}|(s+p_j)|}{\\prod_{k=1}^{n_z}|(s+z_k)|}|_{s=s_i}"
+        }
+        descricao="Formula do modulo do professor"
       />
       <Formula
-        latex={`s_0 = ${complexoParaLatex(s0)}`}
-        descricao={`Ponto ${formatarComplexo(s0)}`}
+        latex={`s_i = ${complexoParaLatex(s0)}`}
+        descricao={`Ponto si ${formatarComplexo(s0)}`}
       />
       <hr />
       <p>
-        <strong>Distâncias dos polos:</strong>
+        <strong>Distâncias aos polos (A):</strong>
       </p>
       {polos.map((p, i) => {
         const dx = s0.re - p.re;
         const dy = s0.im - p.im;
         const d = Math.hypot(dx, dy);
-        const v = { re: dx, im: dy };
         return (
           <Formula
             key={i}
-            latex={`|s_0 - p_{${i + 1}}| = |${complexoParaLatex(s0)} - (${complexoParaLatex(p)})| = |${complexoParaLatex(v)}| = ${d.toFixed(4)}`}
-            descricao={`Distancia polo ${i + 1}: ${d.toFixed(4)}`}
+            latex={`A_{${i + 1}} = \\sqrt{${Math.abs(dy).toFixed(2)}^{2} + ${Math.abs(dx).toFixed(2)}^{2}} = ${d.toFixed(2)}`}
+            descricao={`A ${i + 1}: ${d.toFixed(2)}`}
           />
         );
       })}
-      <p>Produto das distâncias dos polos:</p>
-      <Formula
-        latex={`\\prod |s_0 - p_i| = ${det.distPolos.map((d) => d.toFixed(4)).join(" \\cdot ")} = ${prodP.toFixed(4)}`}
-        descricao="Produto polos"
-      />
       <hr />
       {zeros.length ? (
         <>
           <p>
-            <strong>Distâncias dos zeros:</strong>
+            <strong>Distâncias aos zeros (B):</strong>
           </p>
           {zeros.map((z, i) => {
             const dx = s0.re - z.re;
             const dy = s0.im - z.im;
             const d = Math.hypot(dx, dy);
-            const v = { re: dx, im: dy };
             return (
               <Formula
                 key={i}
-                latex={`|s_0 - z_{${i + 1}}| = |${complexoParaLatex(s0)} - (${complexoParaLatex(z)})| = |${complexoParaLatex(v)}| = ${d.toFixed(4)}`}
-                descricao={`Distancia zero ${i + 1}: ${d.toFixed(4)}`}
+                latex={`B_{${i + 1}} = \\sqrt{${Math.abs(dy).toFixed(2)}^{2} + ${Math.abs(dx).toFixed(2)}^{2}} = ${d.toFixed(2)}`}
+                descricao={`B ${i + 1}: ${d.toFixed(2)}`}
               />
             );
           })}
-          <p>Produto das distâncias dos zeros:</p>
-          <Formula
-            latex={`\\prod |s_0 - z_j| = ${det.distZeros.map((d) => d.toFixed(4)).join(" \\cdot ")} = ${prodZ.toFixed(4)}`}
-            descricao="Produto zeros"
-          />
         </>
       ) : (
-        <Formula
-          latex={"\\prod |s_0 - z_j| = 1"}
-          descricao="Sem zeros, produto 1"
-        />
+        <Formula latex={"\\prod B = 1"} descricao="Sem zeros, produto 1" />
       )}
       <hr />
       <p>
         <strong>Resultado:</strong>
       </p>
-      {prodZ > 1e-12 ? (
+      {prodB > 1e-12 ? (
         <>
           <Formula
-            latex={`K = \\frac{${prodP.toFixed(4)}}{${prodZ.toFixed(4)}} = ${(prodP / prodZ).toFixed(4)}`}
-            descricao={`K igual a ${(prodP / prodZ).toFixed(4)}`}
+            latex={
+              zeros.length
+                ? `K = \\frac{${det.distPolos.map((_, i) => `A_{${i + 1}}`).join("")} }{${det.distZeros.map((_, i) => `B_{${i + 1}}`).join("")} } = \\frac{${prodA.toFixed(2)}}{${prodB.toFixed(2)}} = ${kCalc.toFixed(2)}`
+                : `K = ${prodA.toFixed(2)}`
+            }
+            descricao={`K igual a ${kCalc.toFixed(2)}`}
           />
           {Number.isFinite(K) ? (
             <p className={pertence ? "badge-ok" : "badge-warn"}>
-              K = {K.toFixed(6)}
+              K = {K.toFixed(2)} (K = {K.toFixed(6)})
             </p>
           ) : null}
         </>
@@ -113,7 +107,7 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
           Não é possível calcular K: o ponto coincide com um zero.
         </p>
       )}
-      <DicaProva dica="K = produto das distâncias de s0 aos polos dividido pelo produto das distâncias aos zeros. Distância = hypot(Re(s0−p), Im(s0−p)). Se s0 está em cima de um zero, K=0; se não há zeros, divide por 1." />
+      <DicaProva dica="como o professor: Aᵢ=√(Im²+ΔRe²) até cada polo, Bⱼ até cada zero, K=A₁A₂…/B₁B₂…. Se não há zeros, divide por 1." />
     </details>
   );
 }

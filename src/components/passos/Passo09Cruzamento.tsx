@@ -4,6 +4,7 @@ import Formula, { polinomioParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
 import {
   avaliarPolinomioReal,
+  montarTabelaRouth,
   montarTabelaRouthSimbolica,
 } from "../../lib/lgr/index";
 import type { Complex, Cruzamento } from "../../lib/lgr/index";
@@ -11,7 +12,6 @@ import type { Complex, Cruzamento } from "../../lib/lgr/index";
 interface Props {
   info: Record<string, number[]>;
   cruzs: Cruzamento[];
-  routh0: number[][];
   den: number[];
   num: number[];
   polos: Complex[];
@@ -22,10 +22,16 @@ interface Props {
   corZero: string;
 }
 
+function fmt(n: number): string {
+  if (Math.abs(n) < 1e-12) return "0";
+  const r = Math.round(n);
+  if (Math.abs(n - r) < 1e-9) return `${r}`;
+  return `${+n.toFixed(4)}`;
+}
+
 export default function Passo09Cruzamento({
   info,
   cruzs,
-  routh0,
   den,
   num,
   polos,
@@ -41,23 +47,79 @@ export default function Passo09Cruzamento({
   const imN = info.Im_N || [0];
   const cross = info.cross || [0];
   const simb = useMemo(() => montarTabelaRouthSimbolica(den, num), [den, num]);
+  const tamanho = Math.max(den.length, num.length);
+  const dPad = useMemo(
+    () => [...new Array(tamanho - den.length).fill(0), ...den],
+    [den, tamanho],
+  );
+  const nPad = useMemo(
+    () => [...new Array(tamanho - num.length).fill(0), ...num],
+    [num, tamanho],
+  );
+  const grau = tamanho - 1;
+  const latexCarac = useMemo(() => {
+    const termos = simb.coefs.map((c, i) => {
+      const exp = grau - i;
+      if (exp === 0) return c;
+      if (exp === 1) return `${c}s`;
+      return `${c}s^{${exp}}`;
+    });
+    return `${termos.join(" + ").replaceAll("+ -", "- ")} = 0`;
+  }, [simb, grau]);
   const latexSimb = useMemo(() => {
     const linhas = simb.tab.map(
       (r, i) => `s^{${simb.grau - i}} & ${r.join(" & ")}`,
     );
     return `\\begin{array}{c|${"c".repeat(simb.cols)}} \\hline ${linhas.join(" \\\\ ")} \\\\ \\hline \\end{array}`;
   }, [simb]);
-  const latexRouthNum = useMemo(() => {
-    if (!routh0.length) return "";
-    const grau = routh0.length - 1;
-    const cols = Math.max(...routh0.map((r) => r.length));
-    const linhas = routh0.map((r, i) => {
-      const cels = r.map((v) => v.toFixed(3));
-      while (cels.length < cols) cels.push("");
-      return `s^{${grau - i}} & ${cels.join(" & ")}`;
-    });
-    return `\\begin{array}{c|${"c".repeat(cols)}} \\hline ${linhas.join(" \\\\ ")} \\\\ \\hline \\end{array}`;
-  }, [routh0]);
+  const cubico = grau === 3 && dPad.length === 4 && nPad.length === 4;
+  const dadosCubico = useMemo(() => {
+    if (!cubico) return null;
+    const [d0, d1, d2, d3] = dPad;
+    const [n0, n1, n2, n3] = nPad;
+    const q2 = n1 * n2 - n0 * n3;
+    const q1 = d1 * n2 + n1 * d2 - d0 * n3 - n0 * d3;
+    const q0 = d1 * d2 - d0 * d3;
+    const a3 = `${fmt(d0)}${Math.abs(n0) < 1e-12 ? "" : n0 > 0 ? ` + ${fmt(Math.abs(n0))}K` : ` - ${fmt(Math.abs(n0))}K`}`;
+    const a2 = `${fmt(d1)}${Math.abs(n1) < 1e-12 ? "" : n1 > 0 ? ` + ${fmt(n1)}K` : ` - ${fmt(Math.abs(n1))}K`}`;
+    const a1 = `${fmt(d2)}${Math.abs(n2) < 1e-12 ? "" : n2 > 0 ? ` + ${fmt(n2)}K` : ` - ${fmt(Math.abs(n2))}K`}`;
+    const a0 = `${fmt(d3)}${Math.abs(n3) < 1e-12 ? "" : n3 > 0 ? ` + ${fmt(n3)}K` : ` - ${fmt(Math.abs(n3))}K`}`;
+    let kCrit: number[] = [];
+    if (Math.abs(q2) > 1e-12) {
+      const disc = q1 * q1 - 4 * q2 * q0;
+      if (disc >= 0) {
+        const r1 = (-q1 - Math.sqrt(disc)) / (2 * q2);
+        const r2 = (-q1 + Math.sqrt(disc)) / (2 * q2);
+        kCrit = [r1, r2].filter((k) => k > 1e-10).sort((a, b) => a - b);
+      }
+    } else if (Math.abs(q1) > 1e-12) {
+      const r = -q0 / q1;
+      if (r > 1e-10) kCrit = [r];
+    }
+    if (!kCrit.length) kCrit = cruzs.map((c) => c.K);
+    return {
+      d0,
+      d1,
+      d2,
+      d3,
+      n0,
+      n1,
+      n2,
+      n3,
+      q2,
+      q1,
+      q0,
+      a3,
+      a2,
+      a1,
+      a0,
+      kCrit,
+    };
+  }, [cubico, dPad, nPad, cruzs]);
+  const kCritGerais = useMemo(() => {
+    if (dadosCubico) return dadosCubico.kCrit;
+    return [...new Set(cruzs.map((c) => c.K))].sort((a, b) => a - b);
+  }, [dadosCubico, cruzs]);
   const traces = useMemo<Trace[]>(() => {
     const base: Trace[] = [];
     for (let j = 0; j < polos.length; j++) {
@@ -112,50 +174,89 @@ export default function Passo09Cruzamento({
     <details open>
       <summary>Passo 9, cruzamento com o eixo imaginário</summary>
       <p>
-        <strong>1) Tabela de Routh-Hurwitz:</strong>
+        <strong>O polinômio característico é:</strong>
       </p>
-      <p>A partir da equação característica D(s) + K ⋅ N(s) = 0:</p>
+      <p>A partir de D(s) + K ⋅ N(s) = 0:</p>
+      <Formula
+        display
+        latex={latexCarac}
+        descricao="Polinomio caracteristico"
+      />
+      <p>
+        <strong>Logo (tabela de Routh):</strong>
+      </p>
       <Formula
         display
         latex={latexSimb}
         descricao="Tabela de Routh simbolica com K"
       />
-      <p>
-        <strong>Condições de estabilidade</strong> (primeira coluna &gt; 0):
-      </p>
-      {simb.tab.map((r, i) => (
-        <Formula
-          key={i}
-          latex={`s^{${simb.grau - i}}:\\quad ${r[0]} > 0`}
-          descricao={`Condicao s${simb.grau - i}`}
-        />
-      ))}
-      {cruzs.length > 0 && (
+      {dadosCubico ? (
+        <>
+          <Formula
+            latex={`b_1 = \\frac{(${dadosCubico.a2})(${dadosCubico.a1}) - (${dadosCubico.a3})(${dadosCubico.a0})}{${dadosCubico.a2}} = \\frac{${fmt(dadosCubico.q2)}K^2 ${dadosCubico.q1 >= 0 ? "+" : "-"} ${fmt(Math.abs(dadosCubico.q1))}K ${dadosCubico.q0 >= 0 ? "+" : "-"} ${fmt(Math.abs(dadosCubico.q0))}}{${dadosCubico.a2}} = 0`}
+            descricao="b1 igual a zero"
+          />
+          <Formula
+            latex={`K = \\begin{cases} ${dadosCubico.kCrit.map((k) => k.toFixed(4)).join(" \\\\\\\\ ")} \\end{cases}`}
+            descricao="K criticos"
+          />
+          <p>
+            <strong>Polinômio auxiliar para cada K</strong> (linha s²):
+          </p>
+          {dadosCubico.kCrit.map((k, i) => {
+            const A2 = dadosCubico.d1 + k * dadosCubico.n1;
+            const A0 = dadosCubico.d3 + k * dadosCubico.n3;
+            const w = A2 > 1e-12 && A0 > 0 ? Math.sqrt(A0 / A2) : NaN;
+            return (
+              <Formula
+                key={i}
+                latex={`K = ${k.toFixed(4)} \\Rightarrow ${A2.toFixed(4)}s^2 + ${A0.toFixed(4)} = 0 \\Rightarrow s_{1,2} = \\pm${Number.isFinite(w) ? w.toFixed(4) : "?"}i`}
+                descricao={`Auxiliar K ${k.toFixed(4)}`}
+              />
+            );
+          })}
+        </>
+      ) : (
         <>
           <p>
-            <strong>Valores críticos de K</strong> (onde a primeira coluna se
-            anula):
+            <strong>Condições de estabilidade</strong> (primeira coluna &gt; 0):
           </p>
-          {[...new Set(cruzs.map((c) => c.K.toFixed(4)))].map((k, i) => (
+          {simb.tab.map((r, i) => (
             <Formula
               key={i}
-              latex={`K_{\\text{crit}} = ${k}`}
-              descricao={`K critico ${k}`}
+              latex={`s^{${simb.grau - i}}:\\quad ${r[0]} > 0`}
+              descricao={`Condicao s${simb.grau - i}`}
             />
           ))}
+          {kCritGerais.length > 0 && (
+            <>
+              <p>
+                <strong>Valores críticos de K</strong> (1ª coluna = 0):
+              </p>
+              {kCritGerais.map((k, i) => {
+                let aux = "";
+                if (grau >= 2) {
+                  const t = montarTabelaRouth(den, num, k);
+                  const rowS2 = t[grau - 2];
+                  if (rowS2)
+                    aux = ` \\Rightarrow ${rowS2[0].toFixed(4)}s^2 + ${(rowS2[1] ?? 0).toFixed(4)} = 0`;
+                }
+                const cruz = cruzs.find((c) => Math.abs(c.K - k) < 1e-3);
+                return (
+                  <Formula
+                    key={i}
+                    latex={`K = ${k.toFixed(4)}${aux}${cruz ? ` \\Rightarrow s = \\pm ${cruz.w.toFixed(4)}i` : ""}`}
+                    descricao={`K critico ${k.toFixed(4)}`}
+                  />
+                );
+              })}
+            </>
+          )}
         </>
-      )}
-      <p className="ajuda">
-        Referência numérica (K=1): primeira coluna{" "}
-        {routh0.map((r) => r[0].toFixed(3)).join(", ")}.
-      </p>
-      {latexRouthNum && (
-        <Formula display latex={latexRouthNum} descricao="Routh numerico K=1" />
       )}
       <hr />
       <p>
-        <strong>2) Método alternativo (s = jω):</strong> substituindo s = jω e
-        separando partes real e imaginária:
+        <strong>Conferência (s = jω):</strong> separando Re e Im:
       </p>
       <Formula
         latex={`\\text{Re}_D(\\omega) = ${polinomioParaLatex(reD, "\\omega")}`}
@@ -186,9 +287,6 @@ export default function Passo09Cruzamento({
       />
       {cruzs.length ? (
         <>
-          <p>
-            <strong>Soluções válidas</strong> (ω &gt; 0, K &gt; 0):
-          </p>
           {cruzs.map((c, i) => {
             const imNv = avaliarPolinomioReal(imN, c.w);
             const imDv = avaliarPolinomioReal(imD, c.w);
@@ -220,7 +318,7 @@ export default function Passo09Cruzamento({
       )}
       <hr />
       <p>
-        <strong>3) Gráfico e resumo:</strong>
+        <strong>Gráfico e resumo:</strong>
       </p>
       <LgrPlot
         title="LGR - Cruzamento com eixo imaginário"
@@ -242,7 +340,7 @@ export default function Passo09Cruzamento({
             : `${cruzs.length} cruzamentos com o eixo imaginário encontrados.`}
         </p>
       )}
-      <DicaProva dica="monta D+K·N=0, separa Re e Im com s=jω. Resolve cross(ω)=0, pega ω>0. Acha K. No Routh, zera a primeira coluna para K crítico." />
+      <DicaProva dica="como o professor: monta D+K·N=0, tabela de Routh, zera b₁ (1ª coluna) para K crítico e usa a linha s² como polinômio auxiliar A(s)=0 para achar s=±jω." />
     </details>
   );
 }

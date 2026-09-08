@@ -2,11 +2,7 @@ import { useMemo } from "react";
 import LgrPlot, { type Trace } from "../LgrPlot";
 import Formula, { complexoParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
-import {
-  detalharAnguloS0,
-  formatarComplexo,
-  subtrairComplexos,
-} from "../../lib/lgr/index";
+import { detalharAnguloS0, formatarComplexo } from "../../lib/lgr/index";
 import type { Complex, TesteAngulo } from "../../lib/lgr/index";
 
 interface Props {
@@ -17,6 +13,24 @@ interface Props {
   tema: "light" | "dark";
   corPolo: string;
   corZero: string;
+}
+
+function latexAnguloATAN(
+  simbolo: string,
+  indice: number,
+  vetorRe: number,
+  vetorIm: number,
+  ang: number,
+): string {
+  const num = Math.abs(vetorIm).toFixed(2);
+  const den = Math.abs(vetorRe).toFixed(2);
+  if (Math.abs(vetorRe) < 1e-12) {
+    return `${simbolo}_{${indice}} = 90.00^{\\circ}`;
+  }
+  if (vetorRe >= 0) {
+    return `${simbolo}_{${indice}} = ATAN\\left(\\frac{${num}}{${den}}\\right) = ${ang.toFixed(2)}^{\\circ}`;
+  }
+  return `${simbolo}_{${indice}} = 180^{\\circ} - ATAN\\left(\\frac{${num}}{${den}}\\right) = ${ang.toFixed(2)}^{\\circ}`;
 }
 
 export default function Passo11AnguloS0({
@@ -41,7 +55,6 @@ export default function Passo11AnguloS0({
     [det],
   );
   const delta = somaP - somaZ;
-  const norm360 = ((t.norm % 360) + 360) % 360;
   const traces = useMemo<Trace[]>(() => {
     const base: Trace[] = [
       {
@@ -96,35 +109,31 @@ export default function Passo11AnguloS0({
         Passo 11, critério do ângulo em s0={formatarComplexo(s0)}
       </summary>
       <p>
-        <strong>Condição de pertinência ao LGR:</strong>
+        <strong>Critério do ângulo de fase:</strong>
       </p>
       <Formula
         latex={
-          "\\sum \\angle(s_0 - z_j) - \\sum \\angle(s_0 - p_i) = \\pm 180^{\\circ} (2q+1)"
+          "\\angle P(s)|_{s=s_i} = \\left(\\sum_{n_p} \\theta_i - \\sum_{n_z} \\phi_j\\right)|_{s=s_i} \\Rightarrow \\angle P(s)|_{s=s_i} = 180^{\\circ} \\pm q360^{\\circ}"
         }
-        descricao="Condicao de angulo"
+        descricao="Condicao de angulo do professor"
       />
       <Formula
-        latex={`s_0 = ${complexoParaLatex(s0)}`}
-        descricao={`Ponto s0 ${formatarComplexo(s0)}`}
+        latex={`s_i = ${complexoParaLatex(s0)}`}
+        descricao={`Ponto si ${formatarComplexo(s0)}`}
       />
       <hr />
       <p>
         <strong>Ângulos dos polos (θ):</strong>
       </p>
-      {det.parcelasPolos.map((x, i) => {
-        const p = polos[i];
-        const v = subtrairComplexos(s0, p);
-        return (
-          <Formula
-            key={i}
-            latex={`\\theta_{${i + 1}} = \\angle(s_0 - p_{${i + 1}}) = \\angle(${complexoParaLatex(s0)} - (${complexoParaLatex(p)})) = \\angle(${complexoParaLatex(v)}) = ${x.ang.toFixed(2)}^{\\circ}`}
-            descricao={`Theta ${i + 1}: ${x.ang.toFixed(2)} graus`}
-          />
-        );
-      })}
+      {det.parcelasPolos.map((x, i) => (
+        <Formula
+          key={i}
+          latex={latexAnguloATAN("\\theta", i + 1, x.vetorRe, x.vetorIm, x.ang)}
+          descricao={`Theta ${i + 1}: ${x.ang.toFixed(2)} graus`}
+        />
+      ))}
       <Formula
-        latex={`\\sum \\theta_i = ${somaP.toFixed(2)}^{\\circ}`}
+        latex={`\\sum \\theta = ${somaP.toFixed(2)}^{\\circ}`}
         descricao="Soma thetas"
       />
       <hr />
@@ -133,19 +142,21 @@ export default function Passo11AnguloS0({
           <p>
             <strong>Ângulos dos zeros (φ):</strong>
           </p>
-          {det.parcelasZeros.map((x, i) => {
-            const z = zeros[i];
-            const v = subtrairComplexos(s0, z);
-            return (
-              <Formula
-                key={i}
-                latex={`\\phi_{${i + 1}} = \\angle(s_0 - z_{${i + 1}}) = \\angle(${complexoParaLatex(s0)} - (${complexoParaLatex(z)})) = \\angle(${complexoParaLatex(v)}) = ${x.ang.toFixed(2)}^{\\circ}`}
-                descricao={`Phi ${i + 1}: ${x.ang.toFixed(2)} graus`}
-              />
-            );
-          })}
+          {det.parcelasZeros.map((x, i) => (
+            <Formula
+              key={i}
+              latex={latexAnguloATAN(
+                "\\phi",
+                i + 1,
+                x.vetorRe,
+                x.vetorIm,
+                x.ang,
+              )}
+              descricao={`Phi ${i + 1}: ${x.ang.toFixed(2)} graus`}
+            />
+          ))}
           <Formula
-            latex={`\\sum \\phi_j = ${somaZ.toFixed(2)}^{\\circ}`}
+            latex={`\\sum \\phi = ${somaZ.toFixed(2)}^{\\circ}`}
             descricao="Soma phis"
           />
         </>
@@ -157,17 +168,13 @@ export default function Passo11AnguloS0({
         <strong>Avaliação:</strong>
       </p>
       <Formula
-        latex={`\\Delta\\theta = \\sum \\theta_i - \\sum \\phi_j = ${somaP.toFixed(2)}^{\\circ} - ${somaZ.toFixed(2)}^{\\circ} = ${delta.toFixed(2)}^{\\circ}`}
-        descricao="Delta theta"
-      />
-      <Formula
-        latex={`\\text{Ângulo normalizado: } ${norm360.toFixed(2)}^{\\circ}`}
-        descricao="Normalizado"
+        latex={`\\left(\\sum \\theta_i - \\sum \\phi_j\\right)|_{s=s_i} = ${somaP.toFixed(2)}^{\\circ} - ${somaZ.toFixed(2)}^{\\circ} = ${delta.toFixed(2)}^{\\circ} \\cong 180^{\\circ}`}
+        descricao="Diferenca soma theta menos soma phi"
       />
       <p className={t.pertence ? "badge-ok" : "badge-warn"}>
         {t.pertence
-          ? `O ponto pertence ao LGR (Δθ = ${norm360.toFixed(2)}° ≈ 180°)`
-          : `O ponto não pertence ao LGR (Δθ = ${norm360.toFixed(2)}° ≠ 180°)`}
+          ? `O ponto pertence ao LGR ((Σθ−Σφ) = ${delta.toFixed(2)}° ≅ 180°)`
+          : `O ponto não pertence ao LGR ((Σθ−Σφ) = ${delta.toFixed(2)}° ≠ 180°)`}
       </p>
       <LgrPlot
         title="Critério de Ângulo"
@@ -178,7 +185,7 @@ export default function Passo11AnguloS0({
       <div className="mono" id="desc-s0">
         s0={formatarComplexo(s0)}, ângulo {t.norm.toFixed(2)}°
       </div>
-      <DicaProva dica="para cada polo/zero calcula o vetor s0−p (diferença real e imag) e o ângulo com arctan2(Im,Re). Soma zeros menos soma polos. Normaliza para ±180°. Se der ±180° (±5°) pertence ao LGR." />
+      <DicaProva dica="como o professor: θᵢ=ATAN(|Im|/|ΔRe|) do vetor sᵢ−p (se ΔRe<0, faz 180°−ATAN). Soma Σθ dos polos e Σφ dos zeros. Se (Σθ−Σφ)≅180° o ponto pertence ao LGR." />
     </details>
   );
 }

@@ -7,7 +7,7 @@ import {
   equacaoDerivadaBreakaway,
   formatarComplexo,
 } from "../../lib/lgr/index";
-import type { BreakPoint, Complex } from "../../lib/lgr/index";
+import type { Complex } from "../../lib/lgr/index";
 
 interface Candidata {
   s: Complex;
@@ -21,13 +21,11 @@ interface Candidata {
 export default function Passo08Breakaway({
   num,
   den,
-  bk,
   polos,
   zeros,
 }: {
   num: number[];
   den: number[];
-  bk: BreakPoint[];
   polos: Complex[];
   zeros: Complex[];
 }) {
@@ -159,14 +157,6 @@ export default function Passo08Breakaway({
       {!candidatas.some((c) => c.valida) && (
         <p>
           <em>Nenhum ponto válido com K&gt;0 no LGR.</em>
-        </p>
-      )}
-      {bk.length > 0 && (
-        <p className="mono">
-          Resumo:{" "}
-          {bk
-            .map((b) => `s=${formatarComplexo(b.s)}, K=${b.K.toFixed(4)}`)
-            .join("; ")}
         </p>
       )}
       <DicaProva dica="K = -D(s)/N(s). Deriva dK/ds = 0 → resolve N·D' - D·N' = 0. Só vale raiz em trecho do LGR (passo 4) com K > 0. Calcula K = -D(s)/N(s) em cada candidata e descarta K negativo." />

@@ -170,14 +170,12 @@ export default function App() {
             <Passo08Breakaway
               num={calculoLgr.num}
               den={calculoLgr.den}
-              bk={calculoLgr.bk}
               polos={calculoLgr.polos}
               zeros={calculoLgr.zeros}
             />
             <Passo09Cruzamento
               info={calculoLgr.info}
               cruzs={calculoLgr.cruzs}
-              routh0={calculoLgr.routh0}
               den={calculoLgr.den}
               num={calculoLgr.num}
               polos={calculoLgr.polos}
