@@ -38,6 +38,16 @@ export default function Passo07Assintotas({
       zeros.length ? zeros.map((z) => `(${z.re.toFixed(4)})`).join(" + ") : "0",
     [zeros],
   );
+  const foco = useMemo(
+    () => [
+      ...polos,
+      ...zeros,
+      ...(sigma !== null && Number.isFinite(sigma)
+        ? [{ re: sigma, im: 0 }]
+        : []),
+    ],
+    [polos, zeros, sigma],
+  );
   const traces = useMemo<Trace[]>(() => {
     if (sigma === null) return [];
     const sig: number = sigma;
@@ -52,7 +62,12 @@ export default function Passo07Assintotas({
     ];
     const xs = [...polos, ...zeros].map((p) => p.re);
     const baseMin = xs.length ? Math.min(...xs) : 0;
-    const xMin = baseMin - 3;
+    const baseMax = xs.length ? Math.max(...xs) : 0;
+    const maxAbsY = [...polos, ...zeros].length
+      ? Math.max(...[...polos, ...zeros].map((p) => Math.abs(p.im)))
+      : 0;
+    const span = Math.max(baseMax - baseMin, maxAbsY * 2, 2);
+    const xMin = baseMin - span * 0.3 - 0.5;
     segs.forEach(([a, b], i) => {
       base.push({
         x: [Number.isFinite(a) ? a : xMin, Number.isFinite(b) ? b : sig],
@@ -62,9 +77,9 @@ export default function Passo07Assintotas({
         line: { width: 5 },
       });
     });
+    const L = Math.min(Math.max(span * 1.2, 3), 10);
     angs.forEach((a, i) => {
       const r = (a * Math.PI) / 180;
-      const L = 20;
       base.push({
         x: [sig, sig + L * Math.cos(r)],
         y: [0, L * Math.sin(r)],
@@ -174,6 +189,7 @@ export default function Passo07Assintotas({
         descritoPor="desc-assintotas"
         tema={tema}
         traces={traces}
+        foco={foco}
       />
       <div className="mono" id="desc-assintotas">
         n_a = {na}, sigma_a = {sigma.toFixed(4)}, ângulos{" "}

@@ -78,6 +78,7 @@ export default function Passo04Segmentos({
         descritoPor="desc-segs"
         tema={tema}
         traces={traces}
+        foco={[...polos, ...zeros]}
       />
       <div className="mono" id="desc-segs">
         {segs.length

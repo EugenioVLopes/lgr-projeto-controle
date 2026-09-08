@@ -436,3 +436,40 @@ hr {
     transition: none !important;
   }
 }
+
+.print-actions {
+  margin-top: 16px;
+}
+
+@media print {
+  .no-print,
+  .dica-prova,
+  .lgr-hero .hero-gh {
+    display: none !important;
+  }
+
+  details,
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .formula,
+  .mono {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  summary {
+    padding-right: 0;
+  }
+
+  header.lgr-hero,
+  main {
+    padding: 0;
+  }
+
+  body {
+    background: #fff;
+  }
+}

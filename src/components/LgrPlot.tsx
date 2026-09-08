@@ -15,16 +15,38 @@ function carregarPlotly(): Promise<typeof PlotlyType> {
   return plotlyPromise;
 }
 
+export interface PontoFoco {
+  re: number;
+  im: number;
+}
+
+function alcanceDoFoco(
+  foco: PontoFoco[],
+): { x: [number, number]; y: [number, number] } | undefined {
+  const xs = foco.map((p) => p.re).filter((v) => Number.isFinite(v));
+  const ys = foco.map((p) => p.im).filter((v) => Number.isFinite(v));
+  if (!xs.length) return undefined;
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const maxAbsY = ys.length ? Math.max(...ys.map((v) => Math.abs(v))) : 0;
+  const spanX = Math.max(maxX - minX, 1);
+  const cx = (minX + maxX) / 2;
+  const lado = Math.max((spanX / 2) * 1.6 + 0.8, maxAbsY * 1.6 + 0.8, 1.5);
+  return { x: [cx - lado, cx + lado], y: [-lado, lado] };
+}
+
 export default function LgrPlot({
   traces,
   title,
   descritoPor,
   tema = "light",
+  foco,
 }: {
   traces: Trace[];
   title: string;
   descritoPor?: string;
   tema?: Tema;
+  foco?: PontoFoco[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [carregando, setCarregando] = useState(true);
@@ -68,6 +90,7 @@ export default function LgrPlot({
       .then((Plotly) => {
         if (!montado) return;
         const cores = coresDoTema(tema);
+        const alcance = foco?.length ? alcanceDoFoco(foco) : undefined;
         const layout: Partial<Layout> = {
           autosize: true,
           title: { text: title, font: { size: 14, color: cores.ink } },
@@ -80,6 +103,7 @@ export default function LgrPlot({
             zerolinecolor: cores.border,
             gridcolor: cores.grid,
             tickfont: { color: cores.muted },
+            ...(alcance ? { range: alcance.x, autorange: false } : {}),
           },
           yaxis: {
             title: { text: "Imag (jω)" },
@@ -88,6 +112,7 @@ export default function LgrPlot({
             gridcolor: cores.grid,
             tickfont: { color: cores.muted },
             scaleanchor: "x",
+            ...(alcance ? { range: alcance.y, autorange: false } : {}),
           },
           margin: { l: 45, r: 15, t: 40, b: 40 },
           showlegend: true,
@@ -114,7 +139,7 @@ export default function LgrPlot({
     return () => {
       montado = false;
     };
-  }, [traces, title, ehMobile, tema]);
+  }, [traces, title, ehMobile, tema, foco]);
 
   return (
     <div

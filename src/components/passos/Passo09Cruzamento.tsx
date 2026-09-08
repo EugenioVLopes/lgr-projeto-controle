@@ -325,6 +325,14 @@ export default function Passo09Cruzamento({
         descritoPor="desc-cruz"
         tema={tema}
         traces={traces}
+        foco={[
+          ...polos,
+          ...zeros,
+          ...cruzs.flatMap((c) => [
+            { re: 0, im: c.w },
+            { re: 0, im: -c.w },
+          ]),
+        ]}
       />
       <div className="mono" id="desc-cruz">
         {cruzs.length

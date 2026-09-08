@@ -181,6 +181,7 @@ export default function Passo11AnguloS0({
         descritoPor="desc-s0"
         tema={tema}
         traces={traces}
+        foco={[...polos, ...zeros, s0]}
       />
       <div className="mono" id="desc-s0">
         s0={formatarComplexo(s0)}, ângulo {t.norm.toFixed(2)}°

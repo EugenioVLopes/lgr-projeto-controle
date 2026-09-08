@@ -254,6 +254,7 @@ export default function Passo10Partida({
         descritoPor="desc-partida"
         tema={tema}
         traces={traces}
+        foco={[...polos, ...zeros]}
       />
       <div className="mono" id="desc-partida">
         setas indicam direção de partida/chegada

@@ -65,6 +65,7 @@ export default function Passo03PolosZeros({
         descritoPor="desc-polos"
         tema={tema}
         traces={traces}
+        foco={[...polos, ...zeros]}
       />
       <div className="mono" id="desc-polos">
         {polos.length} polos, {zeros.length} zeros

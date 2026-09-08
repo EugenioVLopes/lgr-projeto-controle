@@ -102,23 +102,25 @@ export default function App() {
         </div>
       </header>
       <main>
-        <FormularioLgr
-          exemploId={exemploId}
-          aoSelecionarExemplo={selecionarExemplo}
-          numeradorG={numeradorG}
-          setNumeradorG={setNumeradorG}
-          denominadorG={denominadorG}
-          setDenominadorG={setDenominadorG}
-          numeradorH={numeradorH}
-          setNumeradorH={setNumeradorH}
-          denominadorH={denominadorH}
-          setDenominadorH={setDenominadorH}
-          parteRealS0={parteRealS0}
-          setParteRealS0={setParteRealS0}
-          parteImaginariaS0={parteImaginariaS0}
-          setParteImaginariaS0={setParteImaginariaS0}
-          temErroCoeficientes={temErroCoeficientes}
-        />
+        <div className="no-print">
+          <FormularioLgr
+            exemploId={exemploId}
+            aoSelecionarExemplo={selecionarExemplo}
+            numeradorG={numeradorG}
+            setNumeradorG={setNumeradorG}
+            denominadorG={denominadorG}
+            setDenominadorG={setDenominadorG}
+            numeradorH={numeradorH}
+            setNumeradorH={setNumeradorH}
+            denominadorH={denominadorH}
+            setDenominadorH={setDenominadorH}
+            parteRealS0={parteRealS0}
+            setParteRealS0={setParteRealS0}
+            parteImaginariaS0={parteImaginariaS0}
+            setParteImaginariaS0={setParteImaginariaS0}
+            temErroCoeficientes={temErroCoeficientes}
+          />
+        </div>
         {temErroCoeficientes ? (
           <div id="erro-coefs" className="card badge-warn" role="alert">
             {calculoLgr.error}
@@ -211,11 +213,22 @@ export default function App() {
             />
             <LgrCompleto
               polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
               ramos={calculoLgr.ramos}
               Ks={calculoLgr.Ks}
               tema={tema}
               corPolo={corPolo}
+              corZero={corZero}
             />
+            <div className="no-print print-actions">
+              <button
+                type="button"
+                className="primary"
+                onClick={() => window.print()}
+              >
+                Imprimir exemplo / salvar PDF
+              </button>
+            </div>
           </>
         )}
       </main>
