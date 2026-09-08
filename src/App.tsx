@@ -205,7 +205,14 @@ export default function App() {
               np={calculoLgr.polos.length}
               nz={calculoLgr.zeros.length}
             />
-            <Passo06Simetria />
+            <Passo06Simetria
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
+              ramos={calculoLgr.ramos}
+              tema={tema}
+              corPolo={corPolo}
+              corZero={corZero}
+            />
             <Passo07Assintotas
               polos={calculoLgr.polos}
               zeros={calculoLgr.zeros}
