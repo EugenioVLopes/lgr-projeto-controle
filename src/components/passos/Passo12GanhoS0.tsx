@@ -1,7 +1,11 @@
 import { useMemo } from "react";
 import Formula, { complexoParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
-import { detalharGanhoS0, formatarComplexo } from "../../lib/lgr/index";
+import {
+  detalharGanhoS0,
+  fatorGanho,
+  formatarComplexo,
+} from "../../lib/lgr/index";
 import type { Complex } from "../../lib/lgr/index";
 
 interface Props {
@@ -9,9 +13,18 @@ interface Props {
   K: number;
   polos: Complex[];
   zeros: Complex[];
+  num: number[];
+  den: number[];
 }
 
-export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
+export default function Passo12GanhoS0({
+  s0,
+  K,
+  polos,
+  zeros,
+  num,
+  den,
+}: Props) {
   const det = useMemo(
     () => detalharGanhoS0(s0, zeros, polos),
     [s0, zeros, polos],
@@ -25,9 +38,16 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
     if (!Number.isFinite(K)) return false;
     return true;
   }, [K]);
+  const fator = fatorGanho(num, den);
   const prodA = prodP;
   const prodB = prodZ;
-  const kCalc = prodB > 1e-12 ? prodA / prodB : Infinity;
+  const kCalc = prodB > 1e-12 ? fator * (prodA / prodB) : Infinity;
+  const mostraFator = Number.isFinite(fator) && Math.abs(fator - 1) > 1e-9;
+  const latexResultado = mostraFator
+    ? `K = \\frac{|a_n|}{|b_m|}\\cdot\\frac{${det.distPolos.map((_, i) => `A_{${i + 1}}`).join("")}}{${zeros.length ? det.distZeros.map((_, i) => `B_{${i + 1}}`).join("") : "1"}} = ${fator.toFixed(4)}\\cdot\\frac{${prodA.toFixed(2)}}{${prodB.toFixed(2)}} = ${kCalc.toFixed(2)}`
+    : zeros.length
+      ? `K = \\frac{${det.distPolos.map((_, i) => `A_{${i + 1}}`).join("")}}{${det.distZeros.map((_, i) => `B_{${i + 1}}`).join("")}} = \\frac{${prodA.toFixed(2)}}{${prodB.toFixed(2)}} = ${kCalc.toFixed(2)}`
+      : `K = ${prodA.toFixed(2)}`;
   return (
     <details open>
       <summary>Passo 12, valor de K na raiz s0={formatarComplexo(s0)}</summary>
@@ -36,7 +56,7 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
       </p>
       <Formula
         latex={
-          "|KP(s)|_{s=s_i} = 1 \\Rightarrow K_i = \\frac{\\prod_{j=1}^{n_p}|(s+p_j)|}{\\prod_{k=1}^{n_z}|(s+z_k)|}|_{s=s_i}"
+          "|KP(s)|_{s=s_i} = 1 \\Rightarrow K_i = \\frac{|a_n|}{|b_m|}\\cdot\\frac{\\prod_{j=1}^{n_p}|(s+p_j)|}{\\prod_{k=1}^{n_z}|(s+z_k)|}|_{s=s_i}"
         }
         descricao="Formula do modulo"
       />
@@ -89,11 +109,7 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
       {prodB > 1e-12 ? (
         <>
           <Formula
-            latex={
-              zeros.length
-                ? `K = \\frac{${det.distPolos.map((_, i) => `A_{${i + 1}}`).join("")} }{${det.distZeros.map((_, i) => `B_{${i + 1}}`).join("")} } = \\frac{${prodA.toFixed(2)}}{${prodB.toFixed(2)}} = ${kCalc.toFixed(2)}`
-                : `K = ${prodA.toFixed(2)}`
-            }
+            latex={latexResultado}
             descricao={`K igual a ${kCalc.toFixed(2)}`}
           />
           {Number.isFinite(K) ? (
@@ -107,7 +123,7 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
           Não é possível calcular K: o ponto coincide com um zero.
         </p>
       )}
-      <DicaProva dica="Aᵢ=√(Im²+ΔRe²) até cada polo, Bⱼ até cada zero, K=A₁A₂…/B₁B₂…. Se não há zeros, divide por 1." />
+      <DicaProva dica="Aᵢ=√(Im²+ΔRe²) até cada polo, Bⱼ até cada zero, K=(|aₙ|/|bₘ|)·A₁A₂…/B₁B₂…. Se não há zeros, divide por 1." />
     </details>
   );
 }

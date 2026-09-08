@@ -45,6 +45,7 @@ export {
   calcularAnguloPartida,
   testarCriterioAngulo,
   calcularGanhoK,
+  fatorGanho,
 } from "./passo10-12-angulos";
 export { calcularRamosLgr } from "./ramos-lgr";
 export {

@@ -272,6 +272,8 @@ export default function App() {
                     K={teste.K}
                     polos={calculoLgr.polos}
                     zeros={calculoLgr.zeros}
+                    num={calculoLgr.num}
+                    den={calculoLgr.den}
                   />
                 </div>
               ))

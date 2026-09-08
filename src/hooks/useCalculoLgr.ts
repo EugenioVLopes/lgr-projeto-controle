@@ -98,8 +98,8 @@ export function useCalculoLgr(
     const { Ks, ramos } = calcularRamosLgr(num, den);
     const testes: ResultadoPonto[] = pontosComDebounce.map((p) => {
       const s0 = criarComplexo(Number(p.re) || 0, Number(p.im) || 0);
-      const t = testarCriterioAngulo(s0, zeros, polos);
-      const K = calcularGanhoK(s0, zeros, polos);
+      const t = testarCriterioAngulo(s0, zeros, polos, num, den);
+      const K = calcularGanhoK(s0, zeros, polos, num, den);
       return { s0, t, K };
     });
     const cxP = polos.filter((p) => p.im > 1e-8);

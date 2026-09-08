@@ -31,11 +31,27 @@ export function calcularAnguloPartida(
   return theta;
 }
 
+import { coeficienteLider } from "./formatacao";
+
+export function fatorGanho(
+  num: readonly number[] | undefined,
+  den: readonly number[] | undefined,
+): number {
+  if (!num || !den) return 1;
+  const liderNum = coeficienteLider(num);
+  const liderDen = coeficienteLider(den);
+  if (!Number.isFinite(liderNum) || !Number.isFinite(liderDen)) return 1;
+  if (Math.abs(liderNum) < 1e-12) return Infinity;
+  return Math.abs(liderDen) / Math.abs(liderNum);
+}
+
 // ---------- Passo 11 ----------
 export function testarCriterioAngulo(
   pontoTeste: Complex,
   zeros: readonly Complex[],
   polos: readonly Complex[],
+  num?: readonly number[],
+  den?: readonly number[],
 ): TesteAngulo {
   const somaPolos = polos.reduce(
     (acc, p) => acc + anguloEmGraus(subtrairComplexos(pontoTeste, p)),
@@ -61,7 +77,9 @@ export function testarCriterioAngulo(
           1,
         )
       : 1;
-    ganhoK = produtoZeros > 1e-12 ? produtoPolos / produtoZeros : Infinity;
+    const fator = fatorGanho(num, den);
+    ganhoK =
+      produtoZeros > 1e-12 ? fator * (produtoPolos / produtoZeros) : Infinity;
   }
   return { ang: angulo, norm: normalizado, pertence, K: ganhoK };
 }
@@ -71,6 +89,8 @@ export function calcularGanhoK(
   pontoTeste: Complex,
   zeros: readonly Complex[],
   polos: readonly Complex[],
+  num?: readonly number[],
+  den?: readonly number[],
 ): number {
   const produtoPolos = polos.reduce(
     (acc, p) => acc * Math.hypot(pontoTeste.re - p.re, pontoTeste.im - p.im),
@@ -83,5 +103,6 @@ export function calcularGanhoK(
         1,
       )
     : 1;
-  return produtoZeros > 1e-12 ? produtoPolos / produtoZeros : Infinity;
+  if (!(produtoZeros > 1e-12)) return Infinity;
+  return fatorGanho(num, den) * (produtoPolos / produtoZeros);
 }

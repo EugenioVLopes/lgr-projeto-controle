@@ -41,6 +41,7 @@ export default function LgrCompleto({
   const [indiceK, setIndiceK] = useState(0);
   const [tocando, setTocando] = useState(false);
   const rafRef = useRef<number | null>(null);
+  const origemRef = useRef(0);
 
   const seguro = total > 0 ? Math.min(Math.max(indiceK, 0), total - 1) : 0;
   const kAtual = total > 0 ? Ks[seguro] : NaN;
@@ -125,14 +126,15 @@ export default function LgrCompleto({
       setTocando(false);
       return;
     }
-    const DURACAO = 5200;
+    const DURACAO_TOTAL = 5200;
     const inicio = performance.now();
-    const origem = 0;
+    const origem = Math.min(Math.max(origemRef.current, 0), total - 1);
+    const restante = Math.max(total - 1 - origem, 1);
+    const duracao = Math.max(DURACAO_TOTAL * (restante / (total - 1)), 800);
     let ultimoEmitido = origem;
     function passo(agora: number): void {
-      const t = Math.min((agora - inicio) / DURACAO, 1);
-      const suavizado = 1 - Math.pow(1 - t, 3);
-      const alvo = Math.round(origem + suavizado * (total - 1 - origem));
+      const t = Math.min((agora - inicio) / duracao, 1);
+      const alvo = Math.round(origem + t * (total - 1 - origem));
       if (Math.abs(alvo - ultimoEmitido) >= 2 || t >= 1) {
         ultimoEmitido = alvo;
         setIndiceK(alvo);
@@ -204,7 +206,12 @@ export default function LgrCompleto({
                 pararAnimacao();
                 return;
               }
-              if (seguro >= total - 1) setIndiceK(0);
+              if (seguro >= total - 1) {
+                origemRef.current = 0;
+                setIndiceK(0);
+              } else {
+                origemRef.current = seguro;
+              }
               setTocando(true);
             }}
           >
