@@ -150,6 +150,9 @@ export default function App() {
               polos={calculoLgr.polos}
               zeros={calculoLgr.zeros}
               segs={calculoLgr.segs}
+              tema={tema}
+              corPolo={corPolo}
+              corZero={corZero}
             />
             <Passo05Lugares
               np={calculoLgr.polos.length}
@@ -168,16 +171,30 @@ export default function App() {
               num={calculoLgr.num}
               den={calculoLgr.den}
               bk={calculoLgr.bk}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
             />
             <Passo09Cruzamento
               info={calculoLgr.info}
               cruzs={calculoLgr.cruzs}
               routh0={calculoLgr.routh0}
+              den={calculoLgr.den}
+              num={calculoLgr.num}
+              polos={calculoLgr.polos}
+              zeros={calculoLgr.zeros}
+              ramos={calculoLgr.ramos}
+              tema={tema}
+              corPolo={corPolo}
+              corZero={corZero}
             />
             <Passo10Partida
               partidas={calculoLgr.partidas}
               polos={calculoLgr.polos}
               zeros={calculoLgr.zeros}
+              ramos={calculoLgr.ramos}
+              tema={tema}
+              corPolo={corPolo}
+              corZero={corZero}
             />
             <Passo11AnguloS0
               s0={calculoLgr.s0}

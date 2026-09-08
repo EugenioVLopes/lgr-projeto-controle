@@ -20,26 +20,20 @@ export default function Passo03PolosZeros({
   corPolo,
   corZero,
 }: Props) {
-  const latexPolos = useMemo(
+  const listaPolos = useMemo(
     () =>
-      polos
-        .map((p, i) => `p_{${i + 1}} = ${complexoParaLatex(p)}`)
-        .join(",\\quad "),
+      polos.map((p, i) => ({
+        latex: `p_{${i + 1}} = ${complexoParaLatex(p)}`,
+        desc: `Polo ${i + 1}: ${formatarComplexo(p)}`,
+      })),
     [polos],
   );
-  const descPolos = useMemo(
-    () => `Polos: ${polos.map(formatarComplexo).join("; ")}`,
-    [polos],
-  );
-  const latexZeros = useMemo(
+  const listaZeros = useMemo(
     () =>
-      zeros
-        .map((z, i) => `z_{${i + 1}} = ${complexoParaLatex(z)}`)
-        .join(",\\quad "),
-    [zeros],
-  );
-  const descZeros = useMemo(
-    () => `Zeros: ${zeros.map(formatarComplexo).join("; ")}`,
+      zeros.map((z, i) => ({
+        latex: `z_{${i + 1}} = ${complexoParaLatex(z)}`,
+        desc: `Zero ${i + 1}: ${formatarComplexo(z)}`,
+      })),
     [zeros],
   );
   const traces = useMemo<Trace[]>(
@@ -72,11 +66,28 @@ export default function Passo03PolosZeros({
         tema={tema}
         traces={traces}
       />
-      <Formula id="desc-polos" latex={latexPolos} descricao={descPolos} />
+      <p>
+        <strong>Polos</strong> (n_p = {polos.length})
+      </p>
+      {listaPolos.map((p, i) => (
+        <Formula
+          key={i}
+          id={i === 0 ? "desc-polos" : undefined}
+          latex={p.latex}
+          descricao={p.desc}
+        />
+      ))}
+      <p>
+        <strong>Zeros</strong> (n_z = {zeros.length})
+      </p>
       {zeros.length ? (
-        <Formula latex={latexZeros} descricao={descZeros} />
+        listaZeros.map((z, i) => (
+          <Formula key={i} latex={z.latex} descricao={z.desc} />
+        ))
       ) : (
-        <p>nenhum finito</p>
+        <p>
+          <em>Nenhum zero finito</em>
+        </p>
       )}
       <DicaProva dica="polos são onde o denominador zera (K=0 começa aqui), zeros onde o numerador zera (K→∞ termina aqui). Marca x e o no plano." />
     </details>

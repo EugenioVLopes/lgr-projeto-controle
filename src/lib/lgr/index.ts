@@ -39,6 +39,8 @@ export {
   encontrarCruzamentosEixoImaginario,
   montarTabelaRouth,
 } from "./passo09-cruzamento";
+export { montarTabelaRouthSimbolica } from "./passo09-routh-simbolico";
+export type { RouthSimbolica } from "./passo09-routh-simbolico";
 export {
   calcularAnguloPartida,
   testarCriterioAngulo,

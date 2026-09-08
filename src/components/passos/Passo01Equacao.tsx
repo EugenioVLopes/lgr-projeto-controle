@@ -29,7 +29,7 @@ export default function Passo01Equacao({
   );
   const latexGH = useMemo(
     () =>
-      `G(s)H(s) = K \\cdot \\frac{${polinomioParaLatex(num)}}{${polinomioParaLatex(den)}}`,
+      `G(s)H(s) = K \\cdot \\frac{${polinomioParaLatex(num)}}{${polinomioParaLatex(den)}} = K \\cdot P(s)`,
     [num, den],
   );
   const latexCaract = useMemo(
@@ -58,7 +58,10 @@ export default function Passo01Equacao({
         latex={latexH}
         descricao="H(s) igual numerador sobre denominador"
       />
+      <hr />
+      <p>Função de transferência de malha aberta:</p>
       <Formula latex={latexGH} descricao="G(s)H(s) multiplicação de G com H" />
+      <p>Equação característica:</p>
       <Formula
         latex={latexCaract}
         descricao="Equação característica antes de multiplicar"
