@@ -22,6 +22,17 @@ import type {
   TesteAngulo,
 } from "../lib/lgr/index";
 
+export interface PontoTesteEntrada {
+  re: string;
+  im: string;
+}
+
+export interface ResultadoPonto {
+  s0: Complex;
+  t: TesteAngulo;
+  K: number;
+}
+
 export type CalcErro = { error: string };
 export type CalcOk = {
   error: null;
@@ -37,9 +48,7 @@ export type CalcOk = {
   info: Record<string, number[]>;
   Ks: number[];
   ramos: Complex[][];
-  s0: Complex;
-  t: TesteAngulo;
-  K: number;
+  testes: ResultadoPonto[];
   partidas: Array<{ p: Complex; ang: number }>;
   routh0: number[][];
 };
@@ -50,15 +59,13 @@ export function useCalculoLgr(
   denominadorG: string,
   numeradorH: string,
   denominadorH: string,
-  parteRealS0: string,
-  parteImaginariaS0: string,
+  pontos: PontoTesteEntrada[],
 ): Calc {
   const numeradorGComDebounce = useValorComDebounce(numeradorG);
   const denominadorGComDebounce = useValorComDebounce(denominadorG);
   const numeradorHComDebounce = useValorComDebounce(numeradorH);
   const denominadorHComDebounce = useValorComDebounce(denominadorH);
-  const parteRealS0ComDebounce = useValorComDebounce(parteRealS0);
-  const parteImaginariaS0ComDebounce = useValorComDebounce(parteImaginariaS0);
+  const pontosComDebounce = useValorComDebounce(pontos);
 
   return useMemo<Calc>(() => {
     const coeficientesNumeradorG = analisarCoeficientes(numeradorGComDebounce);
@@ -89,12 +96,12 @@ export function useCalculoLgr(
     const bk = encontrarPontosBreakaway(num, den, polos, zeros);
     const { cruzs, info } = encontrarCruzamentosEixoImaginario(den, num);
     const { Ks, ramos } = calcularRamosLgr(num, den);
-    const s0 = criarComplexo(
-      Number(parteRealS0ComDebounce) || 0,
-      Number(parteImaginariaS0ComDebounce) || 0,
-    );
-    const t = testarCriterioAngulo(s0, zeros, polos);
-    const K = calcularGanhoK(s0, zeros, polos);
+    const testes: ResultadoPonto[] = pontosComDebounce.map((p) => {
+      const s0 = criarComplexo(Number(p.re) || 0, Number(p.im) || 0);
+      const t = testarCriterioAngulo(s0, zeros, polos);
+      const K = calcularGanhoK(s0, zeros, polos);
+      return { s0, t, K };
+    });
     const cxP = polos.filter((p) => p.im > 1e-8);
     const partidas = cxP.map((p) => ({
       p,
@@ -115,9 +122,7 @@ export function useCalculoLgr(
       info,
       Ks,
       ramos,
-      s0,
-      t,
-      K,
+      testes,
       partidas,
       routh0,
     };
@@ -126,7 +131,6 @@ export function useCalculoLgr(
     denominadorGComDebounce,
     numeradorHComDebounce,
     denominadorHComDebounce,
-    parteRealS0ComDebounce,
-    parteImaginariaS0ComDebounce,
+    pontosComDebounce,
   ]);
 }

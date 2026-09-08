@@ -1,5 +1,5 @@
-import { useState } from "react";
-import FormularioLgr from "./components/FormularioLgr";
+import { useMemo, useState } from "react";
+import FormularioLgr, { type PontoTesteForm } from "./components/FormularioLgr";
 import Passo01Equacao from "./components/passos/Passo01Equacao";
 import Passo02FormaFatorada from "./components/passos/Passo02FormaFatorada";
 import Passo03PolosZeros from "./components/passos/Passo03PolosZeros";
@@ -18,24 +18,35 @@ import { useCalculoLgr } from "./hooks/useCalculoLgr.ts";
 import { analisarCoeficientes } from "./lib/lgr/polinomios";
 
 export default function App() {
-  const exemploInicial =
-    EXEMPLOS.find((exemplo) => exemplo.id === "q1") ?? EXEMPLOS[0];
-  const [exemploId, setExemploId] = useState(exemploInicial.id);
-  const [numeradorG, setNumeradorG] = useState(exemploInicial.numeradorG);
-  const [denominadorG, setDenominadorG] = useState(exemploInicial.denominadorG);
-  const [numeradorH, setNumeradorH] = useState(exemploInicial.numeradorH);
-  const [denominadorH, setDenominadorH] = useState(exemploInicial.denominadorH);
-  const [parteRealS0, setParteRealS0] = useState(
-    String(exemploInicial.parteRealS0),
-  );
-  const [parteImaginariaS0, setParteImaginariaS0] = useState(
-    String(exemploInicial.parteImaginariaS0),
-  );
+  const [exemploId, setExemploId] = useState("");
+  const [numeradorG, setNumeradorG] = useState("");
+  const [denominadorG, setDenominadorG] = useState("");
+  const [numeradorH, setNumeradorH] = useState("");
+  const [denominadorH, setDenominadorH] = useState("");
+  const [pontosTeste, setPontosTeste] = useState<PontoTesteForm[]>([]);
+
+  function gerarId(): string {
+    if (
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
+    )
+      return crypto.randomUUID();
+    return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+  }
   const tema = "light" as const;
   const corPolo = "#dc2626";
   const corZero = "#16a34a";
 
   function selecionarExemplo(id: string): void {
+    if (id === "") {
+      setExemploId("");
+      setNumeradorG("");
+      setDenominadorG("");
+      setNumeradorH("");
+      setDenominadorH("");
+      setPontosTeste([]);
+      return;
+    }
     const exemploSelecionado =
       EXEMPLOS.find((candidato) => candidato.id === id) ?? EXEMPLOS[0];
     setExemploId(exemploSelecionado.id);
@@ -43,19 +54,46 @@ export default function App() {
     setDenominadorG(exemploSelecionado.denominadorG);
     setNumeradorH(exemploSelecionado.numeradorH);
     setDenominadorH(exemploSelecionado.denominadorH);
-    setParteRealS0(String(exemploSelecionado.parteRealS0));
-    setParteImaginariaS0(String(exemploSelecionado.parteImaginariaS0));
+    setPontosTeste([
+      {
+        id: gerarId(),
+        re: String(exemploSelecionado.parteRealS0),
+        im: String(exemploSelecionado.parteImaginariaS0),
+      },
+    ]);
   }
 
+  function adicionarPonto(re: string, im: string): void {
+    setPontosTeste((atual) => [...atual, { id: gerarId(), re, im }]);
+  }
+
+  function atualizarPonto(id: string, campo: "re" | "im", valor: string): void {
+    setPontosTeste((atual) =>
+      atual.map((p) => (p.id === id ? { ...p, [campo]: valor } : p)),
+    );
+  }
+
+  function removerPonto(id: string): void {
+    setPontosTeste((atual) => atual.filter((p) => p.id !== id));
+  }
+
+  const pontosEntrada = useMemo(
+    () => pontosTeste.map((p) => ({ re: p.re, im: p.im })),
+    [pontosTeste],
+  );
   const calculoLgr = useCalculoLgr(
     numeradorG,
     denominadorG,
     numeradorH,
     denominadorH,
-    parteRealS0,
-    parteImaginariaS0,
+    pontosEntrada,
   );
   const temErroCoeficientes = calculoLgr.error !== null;
+  const formularioVazio =
+    numeradorG.trim() === "" &&
+    denominadorG.trim() === "" &&
+    numeradorH.trim() === "" &&
+    denominadorH.trim() === "";
 
   return (
     <>
@@ -114,14 +152,21 @@ export default function App() {
             setNumeradorH={setNumeradorH}
             denominadorH={denominadorH}
             setDenominadorH={setDenominadorH}
-            parteRealS0={parteRealS0}
-            setParteRealS0={setParteRealS0}
-            parteImaginariaS0={parteImaginariaS0}
-            setParteImaginariaS0={setParteImaginariaS0}
+            pontos={pontosTeste}
+            aoAdicionarPonto={adicionarPonto}
+            aoAtualizarPonto={atualizarPonto}
+            aoRemoverPonto={removerPonto}
             temErroCoeficientes={temErroCoeficientes}
           />
         </div>
-        {temErroCoeficientes ? (
+        {formularioVazio ? (
+          <div className="card">
+            <p className="ajuda">
+              Nenhum exemplo carregado. Selecione um exemplo na lista acima ou
+              digite os coeficientes de G(s) e H(s) para começar.
+            </p>
+          </div>
+        ) : temErroCoeficientes ? (
           <div id="erro-coefs" className="card badge-warn" role="alert">
             {calculoLgr.error}
           </div>
@@ -196,21 +241,34 @@ export default function App() {
               corPolo={corPolo}
               corZero={corZero}
             />
-            <Passo11AnguloS0
-              s0={calculoLgr.s0}
-              t={calculoLgr.t}
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            <Passo12GanhoS0
-              s0={calculoLgr.s0}
-              K={calculoLgr.K}
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-            />
+            {calculoLgr.testes.length === 0 ? (
+              <div className="card">
+                <p className="ajuda">
+                  Passos 11 e 12 sem pontos: adicione ao menos um ponto de teste
+                  no formulário acima para ver o critério do ângulo e o ganho K.
+                </p>
+              </div>
+            ) : (
+              calculoLgr.testes.map((teste, indice) => (
+                <div key={pontosTeste[indice]?.id ?? indice}>
+                  <Passo11AnguloS0
+                    s0={teste.s0}
+                    t={teste.t}
+                    polos={calculoLgr.polos}
+                    zeros={calculoLgr.zeros}
+                    tema={tema}
+                    corPolo={corPolo}
+                    corZero={corZero}
+                  />
+                  <Passo12GanhoS0
+                    s0={teste.s0}
+                    K={teste.K}
+                    polos={calculoLgr.polos}
+                    zeros={calculoLgr.zeros}
+                  />
+                </div>
+              ))
+            )}
             <LgrCompleto
               polos={calculoLgr.polos}
               zeros={calculoLgr.zeros}

@@ -1,6 +1,14 @@
-import Formula from "./Formula";
+import { useState } from "react";
+import Formula, { complexoParaLatex } from "./Formula";
 import { EXEMPLOS } from "../lib/examples";
-import { usePreviewFuncao, usePreviewS0 } from "../hooks/usePreviews.ts";
+import { usePreviewFuncao } from "../hooks/usePreviews.ts";
+import { criarComplexo } from "../lib/lgr/index";
+
+export interface PontoTesteForm {
+  id: string;
+  re: string;
+  im: string;
+}
 
 interface FormularioLgrProps {
   exemploId: string;
@@ -13,10 +21,10 @@ interface FormularioLgrProps {
   setNumeradorH: (v: string) => void;
   denominadorH: string;
   setDenominadorH: (v: string) => void;
-  parteRealS0: string;
-  setParteRealS0: (v: string) => void;
-  parteImaginariaS0: string;
-  setParteImaginariaS0: (v: string) => void;
+  pontos: PontoTesteForm[];
+  aoAdicionarPonto: (re: string, im: string) => void;
+  aoAtualizarPonto: (id: string, campo: "re" | "im", valor: string) => void;
+  aoRemoverPonto: (id: string) => void;
   temErroCoeficientes: boolean;
 }
 
@@ -32,16 +40,26 @@ export default function FormularioLgr(props: FormularioLgrProps) {
     setNumeradorH,
     denominadorH,
     setDenominadorH,
-    parteRealS0,
-    setParteRealS0,
-    parteImaginariaS0,
-    setParteImaginariaS0,
+    pontos,
+    aoAdicionarPonto,
+    aoAtualizarPonto,
+    aoRemoverPonto,
     temErroCoeficientes,
   } = props;
   const latexG = usePreviewFuncao(numeradorG, denominadorG, "G");
   const latexH = usePreviewFuncao(numeradorH, denominadorH, "H");
-  const previewS0 = usePreviewS0(parteRealS0, parteImaginariaS0);
+  const [novoRe, setNovoRe] = useState("");
+  const [novoIm, setNovoIm] = useState("");
   const descrito = "erro-coefs ajuda-coefs";
+
+  function adicionar(): void {
+    const re = novoRe.trim() === "" ? "0" : novoRe.trim();
+    const im = novoIm.trim() === "" ? "0" : novoIm.trim();
+    if (Number.isNaN(Number(re)) || Number.isNaN(Number(im))) return;
+    aoAdicionarPonto(re, im);
+    setNovoRe("");
+    setNovoIm("");
+  }
 
   return (
     <div className="card">
@@ -51,6 +69,7 @@ export default function FormularioLgr(props: FormularioLgrProps) {
         value={exemploId}
         onChange={(e) => aoSelecionarExemplo(e.target.value)}
       >
+        <option value="">— selecione um exemplo —</option>
         {EXEMPLOS.map((e) => (
           <option key={e.id} value={e.id}>
             {e.nome}
@@ -116,37 +135,93 @@ export default function FormularioLgr(props: FormularioLgrProps) {
         </fieldset>
       </div>
       <fieldset>
-        <legend>Ponto de teste s0</legend>
-        <Formula
-          latex={previewS0.latex}
-          descricao={`Ponto de teste s0 igual a ${previewS0.latex}`}
-        />
+        <legend>Pontos de teste s0 (passos 11 e 12)</legend>
+        {pontos.length === 0 ? (
+          <p className="ajuda">
+            Nenhum ponto adicionado. Informe Re e Im abaixo e toque em
+            “Adicionar ponto” para testar os passos 11 e 12.
+          </p>
+        ) : (
+          <div>
+            {pontos.map((p, indice) => {
+              const s0 = criarComplexo(Number(p.re) || 0, Number(p.im) || 0);
+              return (
+                <div key={p.id} className="card" style={{ marginBottom: 8 }}>
+                  <Formula
+                    latex={`s_{${indice + 1}} = ${complexoParaLatex(s0)}`}
+                    descricao={`Ponto de teste ${indice + 1} igual a ${p.re} + ${p.im}j`}
+                  />
+                  <div className="grid2">
+                    <div>
+                      <label htmlFor={`re-s0-${p.id}`}>Re(s{indice + 1})</label>
+                      <input
+                        id={`re-s0-${p.id}`}
+                        value={p.re}
+                        onChange={(e) =>
+                          aoAtualizarPonto(p.id, "re", e.target.value)
+                        }
+                        inputMode="decimal"
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={`im-s0-${p.id}`}>Im(s{indice + 1})</label>
+                      <input
+                        id={`im-s0-${p.id}`}
+                        value={p.im}
+                        onChange={(e) =>
+                          aoAtualizarPonto(p.id, "im", e.target.value)
+                        }
+                        inputMode="decimal"
+                        autoComplete="off"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => aoRemoverPonto(p.id)}
+                    aria-label={`Remover ponto ${indice + 1}`}
+                    style={{ marginTop: 8, minHeight: 44, width: "100%" }}
+                  >
+                    Remover ponto {indice + 1}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="grid2">
           <div>
-            <label htmlFor="re-s0">Teste Re(s0)</label>
+            <label htmlFor="novo-re-s0">Novo Re(s0)</label>
             <input
-              id="re-s0"
-              value={parteRealS0}
-              onChange={(e) => setParteRealS0(e.target.value)}
+              id="novo-re-s0"
+              value={novoRe}
+              onChange={(e) => setNovoRe(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErroCoeficientes}
-              aria-describedby={descrito}
+              placeholder="ex.: -1"
             />
           </div>
           <div>
-            <label htmlFor="im-s0">Teste Im(s0)</label>
+            <label htmlFor="novo-im-s0">Novo Im(s0)</label>
             <input
-              id="im-s0"
-              value={parteImaginariaS0}
-              onChange={(e) => setParteImaginariaS0(e.target.value)}
+              id="novo-im-s0"
+              value={novoIm}
+              onChange={(e) => setNovoIm(e.target.value)}
               inputMode="decimal"
               autoComplete="off"
-              aria-invalid={temErroCoeficientes}
-              aria-describedby={descrito}
+              placeholder="ex.: 2"
             />
           </div>
         </div>
+        <button
+          type="button"
+          className="primary"
+          onClick={adicionar}
+          style={{ marginTop: 8 }}
+        >
+          Adicionar ponto
+        </button>
       </fieldset>
       <p id="ajuda-coefs" className="ajuda">
         Coefs em ordem decrescente de s, separados por espaço. Ex.: s²+13s →
