@@ -57,7 +57,7 @@ export default function Passo02FormaFatorada({
   }, [num, den, zeros, polos]);
 
   return (
-    <details>
+    <details open>
       <summary>Passo 2, forma fatorada</summary>
       <Formula latex={latex} descricao="P igual a N sobre D" />
       <Formula latex={latexP} descricao={descP} />

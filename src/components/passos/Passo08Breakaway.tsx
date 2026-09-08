@@ -36,7 +36,7 @@ export default function Passo08Breakaway({
     [bk],
   );
   return (
-    <details>
+    <details open>
       <summary>Passo 8, breakaway/break-in (dK/ds=0)</summary>
       <div className="memoria">
         <Formula

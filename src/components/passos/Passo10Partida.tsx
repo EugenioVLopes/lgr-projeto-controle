@@ -46,7 +46,7 @@ export default function Passo10Partida({ partidas, polos, zeros }: Props) {
     [polos],
   );
   return (
-    <details>
+    <details open>
       <summary>Passo 10, ângulos partida/chegada</summary>
       {partidas.length ? (
         <Formula

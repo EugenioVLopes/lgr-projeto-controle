@@ -13,7 +13,7 @@ export default function Passo05Lugares({ np, nz }: { np: number; nz: number }) {
     [total],
   );
   return (
-    <details>
+    <details open>
       <summary>Passo 5, lugares separados</summary>
       <Formula latex={latex} descricao={descricao} />
       <DicaProva dica="Ls é o número de ramos = número de polos (quase sempre maior que zeros). Cada polo sai um ramo." />

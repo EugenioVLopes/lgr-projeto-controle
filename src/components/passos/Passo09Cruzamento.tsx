@@ -64,7 +64,7 @@ export default function Passo09Cruzamento({ info, cruzs, routh0 }: Props) {
     [routh0],
   );
   return (
-    <details>
+    <details open>
       <summary>Passo 9, cruzamento eixo imaginário (Routh + s=jω)</summary>
       <div className="memoria">
         <Formula

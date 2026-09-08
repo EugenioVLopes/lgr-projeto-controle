@@ -42,7 +42,7 @@ export default function Passo04Segmentos({
     return `reais ordenados: ${reais.map((r) => r.toFixed(4)).join(", ")} → O LGR se situa à esquerda de um número ímpar de pólos e zeros (conta à direita: ímpar = pertence)`;
   }, [polos, zeros]);
   return (
-    <details>
+    <details open>
       <summary>Passo 4, segmentos eixo real</summary>
       {!segs.length ? (
         <p>nenhum segmento do LGR sobre o eixo real.</p>
