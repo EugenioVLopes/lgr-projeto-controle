@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import LgrPlot, { type Trace } from "../LgrPlot";
-import Formula from "../Formula";
+import Formula, { anguloMemoriaParaLatex, vetorParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
 import {
   detalharPartida,
@@ -169,16 +169,26 @@ export default function Passo10Partida({
                 {det.parcelasPolos.map((x, j) => (
                   <Formula
                     key={j}
-                    latex={`\\angle(p_k - p_j) = ${x.ang.toFixed(2)}^{\\circ}`}
-                    descricao={`Angulo ${x.origem}: ${x.vetorRe.toFixed(2)} ${x.vetorIm >= 0 ? "+" : ""}${x.vetorIm.toFixed(2)}j`}
+                    latex={anguloMemoriaParaLatex(
+                      `\\angle(p_k - ${x.origem})`,
+                      x.vetorRe,
+                      x.vetorIm,
+                      x.ang,
+                    )}
+                    descricao={`Angulo ${x.origem}: ${vetorParaLatex(x.vetorRe, x.vetorIm)} = ${x.ang.toFixed(2)} graus`}
                   />
                 ))}
                 {zeros.length > 0 && <p>Ângulos dos zeros:</p>}
                 {det.parcelasZeros.map((x, j) => (
                   <Formula
                     key={j}
-                    latex={`\\angle(p_k - z_j) = ${x.ang.toFixed(2)}^{\\circ}`}
-                    descricao={`Zero ${x.origem}`}
+                    latex={anguloMemoriaParaLatex(
+                      `\\angle(p_k - ${x.origem})`,
+                      x.vetorRe,
+                      x.vetorIm,
+                      x.ang,
+                    )}
+                    descricao={`Zero ${x.origem}: ${vetorParaLatex(x.vetorRe, x.vetorIm)} = ${x.ang.toFixed(2)} graus`}
                   />
                 ))}
                 <p>Somatórios:</p>
@@ -227,6 +237,38 @@ export default function Passo10Partida({
                 <p>
                   <strong>Zero zk = {formatarComplexo(d.zk)}:</strong>
                 </p>
+                <p>Ângulos dos outros zeros:</p>
+                {d.parcelasZeros.length === 0 && (
+                  <p>
+                    <em>nenhum outro zero</em>
+                  </p>
+                )}
+                {d.parcelasZeros.map((x, j) => (
+                  <Formula
+                    key={`z${j}`}
+                    latex={anguloMemoriaParaLatex(
+                      `\\angle(z_k - z_${j + 1})`,
+                      x.vetor.re,
+                      x.vetor.im,
+                      x.ang,
+                    )}
+                    descricao={`Zero ${j + 1}: ${vetorParaLatex(x.vetor.re, x.vetor.im)} = ${x.ang.toFixed(2)} graus`}
+                  />
+                ))}
+                <p>Ângulos dos polos:</p>
+                {d.parcelasPolos.map((x, j) => (
+                  <Formula
+                    key={`p${j}`}
+                    latex={anguloMemoriaParaLatex(
+                      `\\angle(z_k - p_${j + 1})`,
+                      x.vetor.re,
+                      x.vetor.im,
+                      x.ang,
+                    )}
+                    descricao={`Polo ${j + 1}: ${vetorParaLatex(x.vetor.re, x.vetor.im)} = ${x.ang.toFixed(2)} graus`}
+                  />
+                ))}
+                <p>Somatórios:</p>
                 <Formula
                   latex={`\\sum \\angle(z_k - z_j) = ${d.somaZ.toFixed(2)}^{\\circ}`}
                   descricao="Soma zeros"

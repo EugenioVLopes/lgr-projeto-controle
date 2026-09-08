@@ -36,12 +36,16 @@ export function polinomioParaLatex(
 }
 
 export {
+  anguloMemoriaParaLatex,
+  anguloParcelaParaLatex,
   coeficienteLider,
   complexoParaLatex,
+  distanciaParaLatex,
   fatorLinearParaLatex,
   fatoresParaLatex,
   formatarNumLatex,
   polinomioFatoradoParaLatex,
+  vetorParaLatex,
 } from "../lib/lgr/formatacao";
 
 export default function Formula({

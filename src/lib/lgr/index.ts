@@ -55,12 +55,16 @@ export {
   equacaoDerivadaBreakaway,
 } from "./memorias";
 export {
+  anguloMemoriaParaLatex,
+  anguloParcelaParaLatex,
   coeficienteLider,
   complexoParaLatex,
+  distanciaParaLatex,
   fatorLinearParaLatex,
   fatoresParaLatex,
   formatarComplexo,
   formatarNumLatex,
   polinomioFatoradoParaLatex,
   polinomioParaTexto,
+  vetorParaLatex,
 } from "./formatacao";

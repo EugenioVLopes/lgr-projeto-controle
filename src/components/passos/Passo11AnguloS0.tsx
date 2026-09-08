@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import LgrPlot, { type Trace } from "../LgrPlot";
-import Formula, { complexoParaLatex } from "../Formula";
+import Formula, { anguloParcelaParaLatex, complexoParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
 import { detalharAnguloS0, formatarComplexo } from "../../lib/lgr/index";
 import type { Complex, TesteAngulo } from "../../lib/lgr/index";
@@ -22,15 +22,7 @@ function latexAnguloATAN(
   vetorIm: number,
   ang: number,
 ): string {
-  const num = Math.abs(vetorIm).toFixed(2);
-  const den = Math.abs(vetorRe).toFixed(2);
-  if (Math.abs(vetorRe) < 1e-12) {
-    return `${simbolo}_{${indice}} = 90.00^{\\circ}`;
-  }
-  if (vetorRe >= 0) {
-    return `${simbolo}_{${indice}} = ATAN\\left(\\frac{${num}}{${den}}\\right) = ${ang.toFixed(2)}^{\\circ}`;
-  }
-  return `${simbolo}_{${indice}} = 180^{\\circ} - ATAN\\left(\\frac{${num}}{${den}}\\right) = ${ang.toFixed(2)}^{\\circ}`;
+  return anguloParcelaParaLatex(simbolo, indice, vetorRe, vetorIm, ang);
 }
 
 export default function Passo11AnguloS0({

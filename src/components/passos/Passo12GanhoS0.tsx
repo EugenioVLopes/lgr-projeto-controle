@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import Formula, { complexoParaLatex } from "../Formula";
+import Formula, { complexoParaLatex, distanciaParaLatex } from "../Formula";
 import DicaProva from "../DicaProva";
 import {
   detalharGanhoS0,
@@ -75,7 +75,7 @@ export default function Passo12GanhoS0({
         return (
           <Formula
             key={i}
-            latex={`A_{${i + 1}} = \\sqrt{${Math.abs(dy).toFixed(2)}^{2} + ${Math.abs(dx).toFixed(2)}^{2}} = ${d.toFixed(2)}`}
+            latex={distanciaParaLatex("A", i + 1, dx, dy, d)}
             descricao={`A ${i + 1}: ${d.toFixed(2)}`}
           />
         );
@@ -93,7 +93,7 @@ export default function Passo12GanhoS0({
             return (
               <Formula
                 key={i}
-                latex={`B_{${i + 1}} = \\sqrt{${Math.abs(dy).toFixed(2)}^{2} + ${Math.abs(dx).toFixed(2)}^{2}} = ${d.toFixed(2)}`}
+                latex={distanciaParaLatex("B", i + 1, dx, dy, d)}
                 descricao={`B ${i + 1}: ${d.toFixed(2)}`}
               />
             );
