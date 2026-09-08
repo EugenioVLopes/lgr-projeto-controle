@@ -340,7 +340,7 @@ export default function Passo09Cruzamento({
             : `${cruzs.length} cruzamentos com o eixo imaginário encontrados.`}
         </p>
       )}
-      <DicaProva dica="como o professor: monta D+K·N=0, tabela de Routh, zera b₁ (1ª coluna) para K crítico e usa a linha s² como polinômio auxiliar A(s)=0 para achar s=±jω." />
+      <DicaProva dica="monta D+K·N=0, tabela de Routh, zera b₁ (1ª coluna) para K crítico e usa a linha s² como polinômio auxiliar A(s)=0 para achar s=±jω." />
     </details>
   );
 }

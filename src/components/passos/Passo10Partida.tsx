@@ -122,7 +122,10 @@ export default function Passo10Partida({
       <details open>
         <summary>Passo 10, ângulos partida/chegada</summary>
         <p>
-          <em>Sem polos/zeros complexos. Este passo não se aplica.</em>
+          <strong>Não ocorre</strong>
+        </p>
+        <p>
+          <em>Sem polos/zeros complexos.</em>
         </p>
         <DicaProva dica="no polo complexo, soma os ângulos até os outros polos, soma até os zeros, faz 180 − somaPolos + somaZeros." />
       </details>

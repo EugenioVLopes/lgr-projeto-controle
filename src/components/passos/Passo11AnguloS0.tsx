@@ -115,7 +115,7 @@ export default function Passo11AnguloS0({
         latex={
           "\\angle P(s)|_{s=s_i} = \\left(\\sum_{n_p} \\theta_i - \\sum_{n_z} \\phi_j\\right)|_{s=s_i} \\Rightarrow \\angle P(s)|_{s=s_i} = 180^{\\circ} \\pm q360^{\\circ}"
         }
-        descricao="Condicao de angulo do professor"
+        descricao="Condicao de angulo"
       />
       <Formula
         latex={`s_i = ${complexoParaLatex(s0)}`}
@@ -185,7 +185,7 @@ export default function Passo11AnguloS0({
       <div className="mono" id="desc-s0">
         s0={formatarComplexo(s0)}, ângulo {t.norm.toFixed(2)}°
       </div>
-      <DicaProva dica="como o professor: θᵢ=ATAN(|Im|/|ΔRe|) do vetor sᵢ−p (se ΔRe<0, faz 180°−ATAN). Soma Σθ dos polos e Σφ dos zeros. Se (Σθ−Σφ)≅180° o ponto pertence ao LGR." />
+      <DicaProva dica="θᵢ=ATAN(|Im|/|ΔRe|) do vetor sᵢ−p (se ΔRe<0, faz 180°−ATAN). Soma Σθ dos polos e Σφ dos zeros. Se (Σθ−Σφ)≅180° o ponto pertence ao LGR." />
     </details>
   );
 }

@@ -80,28 +80,28 @@ export default function Passo08Breakaway({
     <details open>
       <summary>Passo 8, pontos de saída/entrada (descolamento)</summary>
       <p>
-        <strong>1) Isolar K na equação característica:</strong>
+        <strong>1) Isolar p(s) = K na equação característica:</strong>
       </p>
       <Formula
         latex={
-          "D(s) + K \\cdot N(s) = 0 \\;\\;\\Longrightarrow\\;\\; K = -\\frac{D(s)}{N(s)}"
+          "1 + KP(s) = 1 + K \\cdot \\frac{N(s)}{D(s)} \\;\\;\\Longrightarrow\\;\\; p(s) = K = -\\frac{D(s)}{N(s)}"
         }
-        descricao="Isolar K"
+        descricao="Isolar p(s) igual a K"
       />
       <Formula
-        latex={`K = -\\frac{${polinomioParaLatex(den)}}{${polinomioParaLatex(num)}}`}
-        descricao="K em função de N e D"
+        latex={`p(s) = K = -\\frac{${polinomioParaLatex(den)}}{${polinomioParaLatex(num)}}`}
+        descricao="p(s) em função de N e D"
       />
       <p>
-        <strong>2) Condição de descolamento dK/ds = 0:</strong>
+        <strong>2) Condição de descolamento dp(s)/ds = 0:</strong>
       </p>
       <Formula
         latex={
-          "\\frac{dK}{ds} = -\\frac{D'(s) \\cdot N(s) - D(s) \\cdot N'(s)}{N(s)^2} = 0"
+          "\\frac{dp(s)}{ds} = -\\frac{D'(s) \\cdot N(s) - D(s) \\cdot N'(s)}{N(s)^2} = 0"
         }
         descricao="Derivada igual a zero"
       />
-      <p>Para o numerador ser zero:</p>
+      <p>dp(s)/ds = 0, quando o numerador é zero:</p>
       <Formula
         latex={"D'(s) \\cdot N(s) - D(s) \\cdot N'(s) = 0"}
         descricao="Numerador zero"
@@ -159,7 +159,7 @@ export default function Passo08Breakaway({
           <em>Nenhum ponto válido com K&gt;0 no LGR.</em>
         </p>
       )}
-      <DicaProva dica="K = -D(s)/N(s). Deriva dK/ds = 0 → resolve N·D' - D·N' = 0. Só vale raiz em trecho do LGR (passo 4) com K > 0. Calcula K = -D(s)/N(s) em cada candidata e descarta K negativo." />
+      <DicaProva dica="p(s) = K = -D(s)/N(s). Deriva dp/ds = 0 → resolve N·D' - D·N' = 0. Só vale raiz em trecho do LGR (passo 4) com K > 0." />
     </details>
   );
 }

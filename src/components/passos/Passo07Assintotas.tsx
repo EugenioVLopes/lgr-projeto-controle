@@ -81,7 +81,7 @@ export default function Passo07Assintotas({
     });
     return base;
   }, [polos, zeros, angs, sigma, segs, corPolo]);
-  if (sigma === null) {
+  if (sigma === null || na <= 1) {
     return (
       <details open>
         <summary>Passo 7, assíntotas</summary>
@@ -89,7 +89,11 @@ export default function Passo07Assintotas({
           latex={`n_p = ${polos.length},\\quad n_z = ${zeros.length}`}
           descricao="Numero de polos e zeros"
         />
-        <p>n_p = n_z → sem assíntotas.</p>
+        {na <= 0 ? (
+          <p>n_p = n_z → sem assíntotas.</p>
+        ) : (
+          <p>Não é necessário, pois: (nₚ − n_z) = 1.</p>
+        )}
         <DicaProva dica="sigma_a = (soma dos polos - soma dos zeros) / (np - nz), usando só a parte real. Depois os ângulos são (2q+1)*180/na para q = 0..na-1." />
       </details>
     );

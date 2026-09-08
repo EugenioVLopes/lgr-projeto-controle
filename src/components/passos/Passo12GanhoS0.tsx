@@ -38,7 +38,7 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
         latex={
           "|KP(s)|_{s=s_i} = 1 \\Rightarrow K_i = \\frac{\\prod_{j=1}^{n_p}|(s+p_j)|}{\\prod_{k=1}^{n_z}|(s+z_k)|}|_{s=s_i}"
         }
-        descricao="Formula do modulo do professor"
+        descricao="Formula do modulo"
       />
       <Formula
         latex={`s_i = ${complexoParaLatex(s0)}`}
@@ -107,7 +107,7 @@ export default function Passo12GanhoS0({ s0, K, polos, zeros }: Props) {
           Não é possível calcular K: o ponto coincide com um zero.
         </p>
       )}
-      <DicaProva dica="como o professor: Aᵢ=√(Im²+ΔRe²) até cada polo, Bⱼ até cada zero, K=A₁A₂…/B₁B₂…. Se não há zeros, divide por 1." />
+      <DicaProva dica="Aᵢ=√(Im²+ΔRe²) até cada polo, Bⱼ até cada zero, K=A₁A₂…/B₁B₂…. Se não há zeros, divide por 1." />
     </details>
   );
 }
