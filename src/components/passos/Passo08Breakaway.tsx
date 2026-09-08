@@ -39,7 +39,6 @@ export default function Passo08Breakaway({
     <details>
       <summary>Passo 8, breakaway/break-in (dK/ds=0)</summary>
       <div className="memoria">
-        <p className="memoria-titulo">Como cheguei aqui</p>
         <Formula
           latex={latexND}
           descricao="Numerador e denominador da malha aberta"

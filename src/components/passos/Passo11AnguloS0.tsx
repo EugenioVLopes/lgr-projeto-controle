@@ -91,7 +91,6 @@ export default function Passo11AnguloS0({
         traces={traces}
       />
       <div className="memoria">
-        <p className="memoria-titulo">Como cheguei aqui</p>
         <div className="mono">{memoria}</div>
       </div>
       <Formula id="desc-s0" latex={latex} descricao={desc} />

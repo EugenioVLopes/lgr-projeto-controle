@@ -56,7 +56,6 @@ export default function Passo10Partida({ partidas, polos, zeros }: Props) {
       ) : null}
       {partidas.length ? (
         <div className="memoria">
-          <p className="memoria-titulo">Como cheguei aqui</p>
           <div className="mono">{memoria}</div>
         </div>
       ) : null}

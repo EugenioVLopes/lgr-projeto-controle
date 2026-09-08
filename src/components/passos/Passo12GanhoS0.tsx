@@ -44,7 +44,6 @@ export default function Passo12GanhoS0({
     <details open>
       <summary>Passo 12, K em s0</summary>
       <div className="memoria">
-        <p className="memoria-titulo">Como cheguei aqui</p>
         <div className="mono">{memoria}</div>
       </div>
       <Formula latex={latex} descricao={desc} />

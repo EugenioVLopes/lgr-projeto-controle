@@ -67,7 +67,6 @@ export default function Passo09Cruzamento({ info, cruzs, routh0 }: Props) {
     <details>
       <summary>Passo 9, cruzamento eixo imaginário (Routh + s=jω)</summary>
       <div className="memoria">
-        <p className="memoria-titulo">Como cheguei aqui</p>
         <Formula
           latex={latexPartes}
           descricao="Partes real e imaginária de D(jw) e N(jw)"
