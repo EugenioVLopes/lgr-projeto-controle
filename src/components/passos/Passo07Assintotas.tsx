@@ -57,6 +57,11 @@ export default function Passo07Assintotas({
       `phi(q) = (2q+1)*180/na → ${angs.map((a, q) => `q=${q}: ${a.toFixed(1)}°`).join("; ")}`,
     [angs],
   );
+  const latexPhi = useMemo(
+    () =>
+      `\\phi(q) = \\frac{(2q+1) \\cdot 180^{\\circ}}{${na}} \\to ${angs.map((a, q) => `q=${q}: ${a.toFixed(1)}^{\\circ}`).join(";\\;")}`,
+    [angs, na],
+  );
   const traces = useMemo<Trace[]>(() => {
     if (sigma === null) return [];
     const sig: number = sigma;
@@ -94,7 +99,6 @@ export default function Passo07Assintotas({
             descricao={descResumo}
           />
           <div className="memoria">
-            <p className="memoria-titulo">Como cheguei aqui</p>
             <Formula
               latex={latexSomas}
               descricao="Somas das partes reais de polos e zeros"
@@ -103,7 +107,7 @@ export default function Passo07Assintotas({
               latex={latexSigma}
               descricao={`Centroide sigma a igual a ${sigmaFixo.toFixed(4)}`}
             />
-            <div className="mono">{textoPhi}</div>
+            <Formula latex={latexPhi} descricao={textoPhi} />
           </div>
           <DicaProva dica="sigma_a = (soma dos polos - soma dos zeros) / (np - nz), usando só a parte real. Depois os ângulos são (2q+1)*180/na para q = 0..na-1. Desenha as retas saindo do sigma_a." />
           <LgrPlot

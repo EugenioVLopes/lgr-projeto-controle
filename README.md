@@ -2,8 +2,6 @@
 
 Web app mobile-first em TypeScript que calcula os 12 passos do Lugar Geométrico das Raízes em TS 100% client-side.
 
-Spec oficial: `docs/SisContr.pdf` p.6 (2.2 Passos para construção do LGR) + `docs/DCA3701...Lista...pdf` (5 questões).
-
 ## Rodar no celular (mesma rede)
 
 ```bash
@@ -38,9 +36,3 @@ npm run dev      # dev + host p/ celular
 npm test         # vitest (core numérico)
 npm run build    # tsc + vite build (PWA)
 ```
-
-## Notas numéricas
-
-- `roots()` Durand-Kerner próprio (graus 1 a 8), sem numpy.
-- Troquei o Routh simbólico do sympy por Routh numérico mais `Kcrit` via `cruzamentoJw`. O resultado para o usuário é o mesmo.
-- Plotly `plotly.js-basic-dist-min`, que mantém o pinch-zoom no celular.
