@@ -41,12 +41,14 @@ export default function LgrPlot({
   descritoPor,
   tema = "light",
   foco,
+  temporal = false,
 }: {
   traces: Trace[];
   title: string;
   descritoPor?: string;
   tema?: Tema;
   foco?: PontoFoco[];
+  temporal?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [carregando, setCarregando] = useState(true);
@@ -98,7 +100,7 @@ export default function LgrPlot({
           plot_bgcolor: cores.surface,
           font: { color: cores.ink },
           xaxis: {
-            title: { text: "Real" },
+            title: { text: temporal ? "Tempo (s)" : "Real" },
             zeroline: true,
             zerolinecolor: cores.border,
             gridcolor: cores.grid,
@@ -106,12 +108,12 @@ export default function LgrPlot({
             ...(alcance ? { range: alcance.x, autorange: false } : {}),
           },
           yaxis: {
-            title: { text: "Imag (jω)" },
+            title: { text: temporal ? "Saída y(t)" : "Imag (jω)" },
             zeroline: true,
             zerolinecolor: cores.border,
             gridcolor: cores.grid,
             tickfont: { color: cores.muted },
-            scaleanchor: "x",
+            ...(temporal ? {} : { scaleanchor: "x" }),
             ...(alcance ? { range: alcance.y, autorange: false } : {}),
           },
           margin: { l: 45, r: 15, t: 40, b: 40 },
@@ -139,7 +141,7 @@ export default function LgrPlot({
     return () => {
       montado = false;
     };
-  }, [traces, title, ehMobile, tema, foco]);
+  }, [traces, title, ehMobile, tema, foco, temporal]);
 
   return (
     <div

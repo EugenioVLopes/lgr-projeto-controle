@@ -16,8 +16,12 @@ import LgrCompleto from "./components/passos/LgrCompleto";
 import { EXEMPLOS } from "./lib/examples";
 import { useCalculoLgr } from "./hooks/useCalculoLgr.ts";
 import { analisarCoeficientes } from "./lib/lgr/polinomios";
+import ProjetoControladores from "./components/controladores/ProjetoControladores";
+import { useImpressaoPassos } from "./hooks/useImpressaoPassos";
 
 export default function App() {
+  const [unidade, setUnidade] = useState<1 | 2>(1);
+  useImpressaoPassos(unidade);
   const [exemploId, setExemploId] = useState("");
   const [numeradorG, setNumeradorG] = useState("");
   const [denominadorG, setDenominadorG] = useState("");
@@ -117,7 +121,7 @@ export default function App() {
         </svg>
         <div className="header-row">
           <div className="hero-copy">
-            <h1>Lugar Geométrico das Raízes (LGR)</h1>
+            <h1>LGR e projeto de controladores</h1>
             <p className="hero-meta">
               DCA3701.0 — Projeto de Sistemas de Controle — Teoria — T01
               (2026.2) UFRN
@@ -140,164 +144,188 @@ export default function App() {
         </div>
       </header>
       <main>
-        <div className="no-print">
-          <FormularioLgr
-            exemploId={exemploId}
-            aoSelecionarExemplo={selecionarExemplo}
-            numeradorG={numeradorG}
-            setNumeradorG={setNumeradorG}
-            denominadorG={denominadorG}
-            setDenominadorG={setDenominadorG}
-            numeradorH={numeradorH}
-            setNumeradorH={setNumeradorH}
-            denominadorH={denominadorH}
-            setDenominadorH={setDenominadorH}
-            pontos={pontosTeste}
-            aoAdicionarPonto={adicionarPonto}
-            aoAtualizarPonto={atualizarPonto}
-            aoRemoverPonto={removerPonto}
-            temErroCoeficientes={temErroCoeficientes}
-          />
-        </div>
-        {formularioVazio ? (
-          <div className="card">
-            <p className="ajuda">
-              Nenhum exemplo carregado. Selecione um exemplo na lista acima ou
-              digite os coeficientes de G(s) e H(s) para começar.
-            </p>
+        <nav className="unidades no-print" aria-label="Unidade da disciplina">
+          <button
+            id="nav-lgr"
+            type="button"
+            aria-pressed={unidade === 1}
+            aria-controls="painel-lgr"
+            onClick={() => setUnidade(1)}
+          >
+            1ª unidade · LGR
+          </button>
+          <button
+            id="nav-controladores"
+            type="button"
+            aria-pressed={unidade === 2}
+            aria-controls="painel-controladores"
+            onClick={() => setUnidade(2)}
+          >
+            2ª unidade · Controladores
+          </button>
+        </nav>
+        <ProjetoControladores ativo={unidade === 2} />
+        <div id="painel-lgr" hidden={unidade !== 1} aria-labelledby="nav-lgr">
+          <div className="no-print">
+            <FormularioLgr
+              exemploId={exemploId}
+              aoSelecionarExemplo={selecionarExemplo}
+              numeradorG={numeradorG}
+              setNumeradorG={setNumeradorG}
+              denominadorG={denominadorG}
+              setDenominadorG={setDenominadorG}
+              numeradorH={numeradorH}
+              setNumeradorH={setNumeradorH}
+              denominadorH={denominadorH}
+              setDenominadorH={setDenominadorH}
+              pontos={pontosTeste}
+              aoAdicionarPonto={adicionarPonto}
+              aoAtualizarPonto={atualizarPonto}
+              aoRemoverPonto={removerPonto}
+              temErroCoeficientes={temErroCoeficientes}
+            />
           </div>
-        ) : temErroCoeficientes ? (
-          <div id="erro-coefs" className="card badge-warn" role="alert">
-            {calculoLgr.error}
-          </div>
-        ) : (
-          <>
-            <Passo01Equacao
-              numeradorG={analisarCoeficientes(numeradorG) ?? []}
-              denominadorG={analisarCoeficientes(denominadorG) ?? []}
-              numeradorH={analisarCoeficientes(numeradorH) ?? []}
-              denominadorH={analisarCoeficientes(denominadorH) ?? []}
-              num={calculoLgr.num}
-              den={calculoLgr.den}
-            />
-            <Passo02FormaFatorada
-              num={calculoLgr.num}
-              den={calculoLgr.den}
-              zeros={calculoLgr.zeros}
-              polos={calculoLgr.polos}
-            />
-            <Passo03PolosZeros
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            <Passo04Segmentos
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              segs={calculoLgr.segs}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            <Passo05Lugares
-              np={calculoLgr.polos.length}
-              nz={calculoLgr.zeros.length}
-            />
-            <Passo06Simetria
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              ramos={calculoLgr.ramos}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            <Passo07Assintotas
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              sigma={calculoLgr.sigma}
-              angs={calculoLgr.angs}
-              tema={tema}
-              corPolo={corPolo}
-            />
-            <Passo08Breakaway
-              num={calculoLgr.num}
-              den={calculoLgr.den}
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-            />
-            <Passo09Cruzamento
-              info={calculoLgr.info}
-              cruzs={calculoLgr.cruzs}
-              den={calculoLgr.den}
-              num={calculoLgr.num}
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              ramos={calculoLgr.ramos}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            <Passo10Partida
-              partidas={calculoLgr.partidas}
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              ramos={calculoLgr.ramos}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            {calculoLgr.testes.length === 0 ? (
-              <div className="card">
-                <p className="ajuda">
-                  Passos 11 e 12 sem pontos: adicione ao menos um ponto de teste
-                  no formulário acima para ver o critério do ângulo e o ganho K.
-                </p>
-              </div>
-            ) : (
-              calculoLgr.testes.map((teste, indice) => (
-                <div key={pontosTeste[indice]?.id ?? indice}>
-                  <Passo11AnguloS0
-                    s0={teste.s0}
-                    t={teste.t}
-                    polos={calculoLgr.polos}
-                    zeros={calculoLgr.zeros}
-                    tema={tema}
-                    corPolo={corPolo}
-                    corZero={corZero}
-                  />
-                  <Passo12GanhoS0
-                    s0={teste.s0}
-                    K={teste.K}
-                    polos={calculoLgr.polos}
-                    zeros={calculoLgr.zeros}
-                    num={calculoLgr.num}
-                    den={calculoLgr.den}
-                  />
-                </div>
-              ))
-            )}
-            <LgrCompleto
-              polos={calculoLgr.polos}
-              zeros={calculoLgr.zeros}
-              ramos={calculoLgr.ramos}
-              Ks={calculoLgr.Ks}
-              tema={tema}
-              corPolo={corPolo}
-              corZero={corZero}
-            />
-            <div className="no-print print-actions">
-              <button
-                type="button"
-                className="primary"
-                onClick={() => window.print()}
-              >
-                Imprimir exemplo / salvar PDF
-              </button>
+          {formularioVazio ? (
+            <div className="card">
+              <p className="ajuda">
+                Nenhum exemplo carregado. Selecione um exemplo na lista acima ou
+                digite os coeficientes de G(s) e H(s) para começar.
+              </p>
             </div>
-          </>
-        )}
+          ) : temErroCoeficientes ? (
+            <div id="erro-coefs" className="card badge-warn" role="alert">
+              {calculoLgr.error}
+            </div>
+          ) : (
+            <>
+              <Passo01Equacao
+                numeradorG={analisarCoeficientes(numeradorG) ?? []}
+                denominadorG={analisarCoeficientes(denominadorG) ?? []}
+                numeradorH={analisarCoeficientes(numeradorH) ?? []}
+                denominadorH={analisarCoeficientes(denominadorH) ?? []}
+                num={calculoLgr.num}
+                den={calculoLgr.den}
+              />
+              <Passo02FormaFatorada
+                num={calculoLgr.num}
+                den={calculoLgr.den}
+                zeros={calculoLgr.zeros}
+                polos={calculoLgr.polos}
+              />
+              <Passo03PolosZeros
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                tema={tema}
+                corPolo={corPolo}
+                corZero={corZero}
+              />
+              <Passo04Segmentos
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                segs={calculoLgr.segs}
+                tema={tema}
+                corPolo={corPolo}
+                corZero={corZero}
+              />
+              <Passo05Lugares
+                np={calculoLgr.polos.length}
+                nz={calculoLgr.zeros.length}
+              />
+              <Passo06Simetria
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                ramos={calculoLgr.ramos}
+                tema={tema}
+                corPolo={corPolo}
+                corZero={corZero}
+              />
+              <Passo07Assintotas
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                sigma={calculoLgr.sigma}
+                angs={calculoLgr.angs}
+                tema={tema}
+                corPolo={corPolo}
+              />
+              <Passo08Breakaway
+                num={calculoLgr.num}
+                den={calculoLgr.den}
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+              />
+              <Passo09Cruzamento
+                info={calculoLgr.info}
+                cruzs={calculoLgr.cruzs}
+                den={calculoLgr.den}
+                num={calculoLgr.num}
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                ramos={calculoLgr.ramos}
+                tema={tema}
+                corPolo={corPolo}
+                corZero={corZero}
+              />
+              <Passo10Partida
+                partidas={calculoLgr.partidas}
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                ramos={calculoLgr.ramos}
+                tema={tema}
+                corPolo={corPolo}
+                corZero={corZero}
+              />
+              {calculoLgr.testes.length === 0 ? (
+                <div className="card">
+                  <p className="ajuda">
+                    Passos 11 e 12 sem pontos: adicione ao menos um ponto de
+                    teste no formulário acima para ver o critério do ângulo e o
+                    ganho K.
+                  </p>
+                </div>
+              ) : (
+                calculoLgr.testes.map((teste, indice) => (
+                  <div key={pontosTeste[indice]?.id ?? indice}>
+                    <Passo11AnguloS0
+                      s0={teste.s0}
+                      t={teste.t}
+                      polos={calculoLgr.polos}
+                      zeros={calculoLgr.zeros}
+                      tema={tema}
+                      corPolo={corPolo}
+                      corZero={corZero}
+                    />
+                    <Passo12GanhoS0
+                      s0={teste.s0}
+                      K={teste.K}
+                      polos={calculoLgr.polos}
+                      zeros={calculoLgr.zeros}
+                      num={calculoLgr.num}
+                      den={calculoLgr.den}
+                    />
+                  </div>
+                ))
+              )}
+              <LgrCompleto
+                polos={calculoLgr.polos}
+                zeros={calculoLgr.zeros}
+                ramos={calculoLgr.ramos}
+                Ks={calculoLgr.Ks}
+                tema={tema}
+                corPolo={corPolo}
+                corZero={corZero}
+              />
+              <div className="no-print print-actions">
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => window.print()}
+                >
+                  Imprimir todos os passos / salvar PDF
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </main>
     </>
   );

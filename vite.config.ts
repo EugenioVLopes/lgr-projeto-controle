@@ -7,17 +7,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      workbox: { maximumFileSizeToCacheInBytes: 6 * 1024 * 1024 },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        globPatterns: ["**/*.{js,css,html,svg,png,woff,woff2,ttf,webmanifest}"],
+      },
       manifest: {
-        name: "LGR — 12 Passos",
-        short_name: "LGR",
+        name: "LGR e projeto de controladores",
+        short_name: "Controle",
         description:
-          "Calculadora de Lugar Geométrico das Raízes — 12 passos (DCA-3701 UFRN)",
+          "LGR e projeto de PD, PI e PID para as duas unidades de DCA-3701 UFRN",
         theme_color: "#0f172a",
         background_color: "#ffffff",
         display: "standalone",
         start_url: ".",
-        icons: [{ src: "vite.svg", sizes: "any", type: "image/svg+xml" }],
+        icons: [{ src: "favicon.svg", sizes: "any", type: "image/svg+xml" }],
       },
     }),
   ],
