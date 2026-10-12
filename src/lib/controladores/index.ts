@@ -13,15 +13,16 @@ export interface FuncaoTransferencia {
   num: number[];
   den: number[];
 }
-export type Topologia = "PD" | "PI" | "PID";
+export type TopologiaClassica = "PD" | "PI" | "PID";
+export type Topologia = TopologiaClassica | "primeiraOrdem";
 export type Especificacao =
   | { modo: "mpTs"; mp: number; ts: number; faixa: 2 | 5; margem: number }
   | { modo: "zetaWn"; zeta: number; wn: number }
   | { modo: "polo"; re: number; im: number };
-export interface EntradaProjeto {
+export interface EntradaProjeto<T extends Topologia = Topologia> {
   G: FuncaoTransferencia;
   H: FuncaoTransferencia;
-  topologia: Topologia;
+  topologia: T;
   especificacao: Especificacao;
 }
 export interface ParcelaGeometria {
@@ -31,17 +32,13 @@ export interface ParcelaGeometria {
   angulo: number;
   distancia: number;
 }
-export interface ResultadoProjeto {
+export interface ResultadoProjetoBase {
   entrada: EntradaProjeto;
   sd: Complex;
   zeta: number;
   wn: number;
   wnMin?: number;
-  z: number;
   Kc: number;
-  Kp: number;
-  Ki: number;
-  Kd: number;
   GH: FuncaoTransferencia;
   Gc: FuncaoTransferencia;
   estrutura: FuncaoTransferencia;
@@ -49,8 +46,6 @@ export interface ResultadoProjeto {
   fechada: FuncaoTransferencia;
   faseGH: number;
   moduloGH: number;
-  alfa: number;
-  faseIntegral: number;
   parcelas: ParcelaGeometria[];
   faseGanho: number;
   polos: Complex[];
@@ -60,6 +55,25 @@ export interface ResultadoProjeto {
   erroModulo: number;
   avisos: string[];
 }
+
+export interface ResultadoClassico extends ResultadoProjetoBase {
+  tipo: "classico";
+  entrada: EntradaProjeto<TopologiaClassica>;
+  z: number;
+  Kp: number;
+  Ki: number;
+  Kd: number;
+  alfa: number;
+  faseIntegral: number;
+}
+export interface ResultadoPrimeiraOrdem extends ResultadoProjetoBase {
+  tipo: "primeiraOrdem";
+  entrada: EntradaProjeto<"primeiraOrdem">;
+  a: number;
+  b: number;
+  valorGH: Complex;
+}
+export type ResultadoProjeto = ResultadoClassico | ResultadoPrimeiraOrdem;
 
 export function limparPolinomio(coefs: readonly number[]): number[] {
   if (!coefs.length || coefs.some((c) => !Number.isFinite(c)))
@@ -177,7 +191,16 @@ export function converterEspecificacao(e: Especificacao): {
   };
 }
 const wrap = (a: number) => ((((a + 180) % 360) + 360) % 360) - 180;
+export function projetarControlador(
+  entrada: EntradaProjeto<TopologiaClassica>,
+): ResultadoClassico;
+export function projetarControlador(
+  entrada: EntradaProjeto<"primeiraOrdem">,
+): ResultadoPrimeiraOrdem;
+export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto;
 export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto {
+  if (!["PD", "PI", "PID", "primeiraOrdem"].includes(entrada.topologia))
+    throw new Error("Escolha PD, PI, PID ou o controlador a/(s+b).");
   const G = validarTf(entrada.G),
     H = validarTf(entrada.H);
   const esp = converterEspecificacao(entrada.especificacao),
@@ -194,28 +217,86 @@ export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto {
     moduloGH = moduloComplexo(valor);
   if (!Number.isFinite(moduloGH) || moduloGH <= 0)
     throw new Error("Não foi possível avaliar G(s)H(s) neste ponto.");
-  const integral = entrada.topologia !== "PD";
-  const faseIntegral = integral ? anguloEmGraus(sd) : 0;
-  const alvo = (((180 - faseGH + faseIntegral) % 360) + 360) % 360;
-  const quantidadeZeros = entrada.topologia === "PID" ? 2 : 1;
-  const alfa = alvo / quantidadeZeros;
-  if (alfa <= 1e-8 || alfa >= 180 - 1e-8)
-    throw new Error(
-      "Esta topologia não permite um zero real finito com ganho positivo no polo escolhido. Altere o polo ou o controlador.",
-    );
-  const z = sd.im / Math.tan((alfa * Math.PI) / 180) - sd.re;
-  const distancia = Math.hypot(sd.re + z, sd.im);
-  const Kc =
-    (integral ? moduloComplexo(sd) : 1) /
-    (Math.pow(distancia, quantidadeZeros) * moduloGH);
-  if (![z, Kc].every(Number.isFinite) || Kc <= 0)
-    throw new Error(
-      "O cálculo resultou em parâmetros não finitos. Escolha outro polo.",
-    );
-  const estrutura = {
-    num: quantidadeZeros === 2 ? [1, 2 * z, z * z] : [1, z],
-    den: integral ? [1, 0] : [1],
-  };
+  let parametros:
+    | Pick<
+        ResultadoClassico,
+        "tipo" | "entrada" | "z" | "Kp" | "Ki" | "Kd" | "alfa" | "faseIntegral"
+      >
+    | Pick<ResultadoPrimeiraOrdem, "tipo" | "entrada" | "a" | "b" | "valorGH">;
+  let estrutura: FuncaoTransferencia, Kc: number;
+  if (entrada.topologia === "primeiraOrdem") {
+    // sd + b + a GH(sd) = 0. Os parâmetros reais vêm das partes
+    // imaginária e real, sem supor ganho positivo ou polo estável de Gc.
+    if (Math.abs(valor.im) <= 1e-12 * moduloGH)
+      throw new Error(
+        "Não existe solução real finita para a e b neste polo: a parte imaginária de G(s)H(s) é nula ou numericamente singular. Escolha outro polo.",
+      );
+    const a = -sd.im / valor.im;
+    const b = -sd.re - a * valor.re;
+    if (![a, b].every(Number.isFinite) || a === 0)
+      throw new Error(
+        "O cálculo de a e b produziu parâmetros não finitos ou ganho nulo. Reveja o polo e os coeficientes.",
+      );
+    Kc = a;
+    estrutura = { num: [1], den: [1, b] };
+    parametros = {
+      tipo: "primeiraOrdem",
+      entrada: {
+        ...entrada,
+        topologia: "primeiraOrdem",
+        G,
+        H,
+        especificacao: { ...entrada.especificacao },
+      },
+      a,
+      b,
+      valorGH: valor,
+    };
+  } else {
+    const integral = entrada.topologia !== "PD";
+    const faseIntegral = integral ? anguloEmGraus(sd) : 0;
+    const alvo = (((180 - faseGH + faseIntegral) % 360) + 360) % 360;
+    const quantidadeZeros = entrada.topologia === "PID" ? 2 : 1;
+    const alfa = alvo / quantidadeZeros;
+    if (alfa <= 1e-8 || alfa >= 180 - 1e-8)
+      throw new Error(
+        "Esta topologia não permite um zero real finito com ganho positivo no polo escolhido. Altere o polo ou o controlador.",
+      );
+    const z = sd.im / Math.tan((alfa * Math.PI) / 180) - sd.re;
+    const distancia = Math.hypot(sd.re + z, sd.im);
+    Kc =
+      (integral ? moduloComplexo(sd) : 1) /
+      (Math.pow(distancia, quantidadeZeros) * moduloGH);
+    if (![z, Kc].every(Number.isFinite) || Kc <= 0)
+      throw new Error(
+        "O cálculo resultou em parâmetros não finitos. Escolha outro polo.",
+      );
+    estrutura = {
+      num: quantidadeZeros === 2 ? [1, 2 * z, z * z] : [1, z],
+      den: integral ? [1, 0] : [1],
+    };
+    parametros = {
+      tipo: "classico",
+      entrada: {
+        ...entrada,
+        topologia: entrada.topologia,
+        G,
+        H,
+        especificacao: { ...entrada.especificacao },
+      },
+      z,
+      alfa,
+      faseIntegral,
+      Kp:
+        entrada.topologia === "PD"
+          ? Kc * z
+          : entrada.topologia === "PID"
+            ? 2 * Kc * z
+            : Kc,
+      Ki: integral ? Kc * (quantidadeZeros === 2 ? z * z : z) : 0,
+      Kd: entrada.topologia === "PI" ? 0 : Kc,
+    };
+  }
   const Gc = { num: estrutura.num.map((c) => Kc * c), den: estrutura.den };
   const malha = produtoTf(Gc, GH),
     fechada = fecharMalha(produtoTf(Gc, G), H);
@@ -249,10 +330,20 @@ export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto {
     );
   }
   const avisos: string[] = [];
-  if (z < 0)
+  if (parametros.tipo === "classico" && parametros.z < 0)
     avisos.push(
       "O zero do controlador está no semiplano direito. O projeto tem fase não mínima.",
     );
+  if (parametros.tipo === "primeiraOrdem") {
+    if (parametros.b <= 0)
+      avisos.push(
+        "O polo do controlador isolado não é assintoticamente estável. Confira a estabilidade da malha fechada.",
+      );
+    if (parametros.a < 0)
+      avisos.push(
+        "O cálculo exige ganho a negativo. O sinal faz parte do controlador projetado.",
+      );
+  }
   if (Gc.num.length > Gc.den.length)
     avisos.push(
       "O controlador ideal é impróprio. A discretização pode resultar em uma equação não causal.",
@@ -262,18 +353,9 @@ export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto {
       "O polo é calculado por uma aproximação de segunda ordem. Confira os limites na resposta completa.",
     );
   return {
-    entrada: { ...entrada, G, H },
+    ...parametros,
     ...esp,
-    z,
     Kc,
-    Kp:
-      entrada.topologia === "PD"
-        ? Kc * z
-        : entrada.topologia === "PID"
-          ? 2 * Kc * z
-          : Kc,
-    Ki: integral ? Kc * (quantidadeZeros === 2 ? z * z : z) : 0,
-    Kd: entrada.topologia === "PI" ? 0 : Kc,
     GH,
     Gc,
     estrutura,
@@ -281,8 +363,6 @@ export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto {
     fechada,
     faseGH,
     moduloGH,
-    alfa,
-    faseIntegral,
     parcelas,
     faseGanho: GH.num[0] / GH.den[0] < 0 ? 180 : 0,
     polos,

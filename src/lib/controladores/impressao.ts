@@ -1,5 +1,15 @@
 import { projetarControlador, type ResultadoProjeto } from "./index";
-import { EXERCICIOS_CONTROLADORES } from "./exemplos";
+import {
+  LISTAS_CONTROLADORES,
+  TODOS_EXERCICIOS_CONTROLADORES,
+  type ListaControladores,
+} from "./exemplos";
+import {
+  discretizarProjeto,
+  type ConfiguracaoDiscreta,
+  type DiscretizacaoProjeto,
+} from "./discretizacao";
+import { METODOS_DISCRETOS } from "./formatacao";
 import { simularDegrau, type RespostaDegrau } from "./simulacao";
 
 export interface ResolucaoImpressao {
@@ -9,6 +19,12 @@ export interface ResolucaoImpressao {
   projeto: ResultadoProjeto;
   resposta: RespostaDegrau;
   inicial?: { projeto: ResultadoProjeto; resposta: RespostaDegrau };
+  lista?: ListaControladores;
+  discretizacao?: {
+    configuracao: ConfiguracaoDiscreta;
+    calculo?: DiscretizacaoProjeto;
+    erro?: string;
+  };
 }
 export interface RequisitoImpressao {
   descricao: string;
@@ -25,10 +41,11 @@ export const numeroImpresso = (x: number | null, unidade = "") =>
 export function criarResolucaoImpressao(
   projeto: ResultadoProjeto,
   exercicioId?: string,
+  configuracao?: ConfiguracaoDiscreta,
 ): ResolucaoImpressao {
   const entrada = projeto.entrada;
   const esp = entrada.especificacao;
-  const exemplo = EXERCICIOS_CONTROLADORES.find((e) => {
+  const exemplo = TODOS_EXERCICIOS_CONTROLADORES.find((e) => {
     const esperado = structuredClone(e.entrada);
     const atual = structuredClone(entrada);
     if (atual.especificacao.modo === "mpTs") atual.especificacao.margem = 1;
@@ -42,27 +59,67 @@ export function criarResolucaoImpressao(
       : esp.modo === "zetaWn"
         ? `fator de amortecimento ζ = ${numeroImpresso(esp.zeta)} e frequência natural ωn = ${numeroImpresso(esp.wn)} rad/s`
         : `o par de polos de malha fechada em ${numeroImpresso(esp.re)} ± ${numeroImpresso(Math.abs(esp.im))}j`;
+  const nomeControlador =
+    entrada.topologia === "primeiraOrdem"
+      ? "Gc(s) = a/(s+b)"
+      : entrada.topologia;
+  let discreta: ResolucaoImpressao["discretizacao"];
+  if (configuracao) {
+    const copia = { ...configuracao };
+    try {
+      discreta = {
+        configuracao: copia,
+        calculo: discretizarProjeto(projeto, copia),
+      };
+    } catch (e) {
+      discreta = {
+        configuracao: copia,
+        erro: e instanceof Error ? e.message : "Não foi possível discretizar.",
+      };
+    }
+  }
+  const pedidoDiscreto = configuracao
+    ? ` Discretizar ${configuracao.alvo === "Gc" ? "o controlador" : "a malha aberta Gc(s)G(s)H(s)"} por ${METODOS_DISCRETOS[configuracao.metodo]?.nome ?? "método inválido"}, com T = ${numeroImpresso(configuracao.periodo)} s.`
+    : "";
   return {
     id: exemplo?.id ?? "manual",
-    titulo: exemplo?.titulo ?? `Projeto manual · ${entrada.topologia}`,
-    enunciado: `Projetar ${entrada.topologia}${entrada.topologia === "PID" ? " com zeros reais e iguais" : ""} para ${pedido}.`,
+    titulo: exemplo?.titulo ?? `Projeto manual · ${nomeControlador}`,
+    enunciado: `Projetar ${nomeControlador}${entrada.topologia === "PID" ? " com zeros reais e iguais" : ""} para ${pedido}.${pedidoDiscreto}`,
     projeto,
+    lista: exemplo
+      ? LISTAS_CONTROLADORES.find((l) =>
+          l.exercicios.some((e) => e.id === exemplo.id),
+        )?.id
+      : undefined,
+    discretizacao: discreta,
     resposta: simularDegrau(projeto.fechada, 20),
   };
 }
 
 // Compartilhado pela impressão no navegador e pelo gerador das entregas.
-export function resolverListaParaEntrega(): ResolucaoImpressao[] {
-  return EXERCICIOS_CONTROLADORES.map((exercicio, i) => {
+export function resolverListaParaEntrega(
+  lista: ListaControladores = "lista1",
+): ResolucaoImpressao[] {
+  const encontrada = LISTAS_CONTROLADORES.find((l) => l.id === lista);
+  if (!encontrada) throw new Error("Escolha a primeira ou a segunda lista.");
+  return encontrada.exercicios.map((exercicio, i) => {
     const entrada = structuredClone(exercicio.entrada);
     let inicial: ResolucaoImpressao["inicial"];
-    if (i === 0 && entrada.especificacao.modo === "mpTs") {
+    if (
+      lista === "lista1" &&
+      i === 0 &&
+      entrada.especificacao.modo === "mpTs"
+    ) {
       const projeto = projetarControlador(structuredClone(entrada));
       inicial = { projeto, resposta: simularDegrau(projeto.fechada, 20) };
       entrada.especificacao.margem = 1.1;
     }
     return {
-      ...criarResolucaoImpressao(projetarControlador(entrada), exercicio.id),
+      ...criarResolucaoImpressao(
+        projetarControlador(entrada),
+        exercicio.id,
+        exercicio.discretizacao,
+      ),
       inicial,
     };
   });
@@ -125,7 +182,7 @@ export function requisitosImpressao({
               ),
             },
           ];
-  if (p.entrada.topologia === "PID")
+  if (p.tipo === "classico" && p.entrada.topologia === "PID")
     criterios.push({
       descricao: "Zeros reais e iguais",
       resultado: `${numeroImpresso(-p.z)} · multiplicidade 2`,
@@ -133,3 +190,6 @@ export function requisitosImpressao({
     });
   return criterios;
 }
+
+export const quantidadePaginas = (r: ResolucaoImpressao) =>
+  r.discretizacao ? 3 : 2;

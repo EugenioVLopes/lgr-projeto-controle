@@ -91,6 +91,15 @@
   flex-wrap: wrap;
   gap: 8px 16px;
 }
+#painel-controladores .step-body .grid2 .opcao-discretizacao {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+.opcao-discretizacao input {
+  width: 20px;
+  min-height: 20px;
+  accent-color: var(--ink);
+}
 .tabela-scroll {
   overflow-x: auto;
 }
@@ -803,6 +812,13 @@ a {
     font-size: 10.5pt;
   }
   .relatorio-impressao .tf-impressa .formula {
+    font-size: 9pt;
+  }
+  .relatorio-impressao .mono {
+    background: none;
+    padding: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
     font-size: 9pt;
   }
   .requisitos-impressos {

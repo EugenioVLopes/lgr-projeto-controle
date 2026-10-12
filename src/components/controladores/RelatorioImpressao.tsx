@@ -3,34 +3,17 @@ import Formula, { complexoParaLatex } from "../Formula";
 import {
   numeroImpresso,
   requisitosImpressao,
+  quantidadePaginas,
   type ResolucaoImpressao,
 } from "../../lib/controladores/impressao";
-import type { FuncaoTransferencia } from "../../lib/controladores";
-
-const n = (value: number) => {
-  if (!Number.isFinite(value)) return "\\text{não definido}";
-  if (value === 0) return "0";
-  if (Math.abs(value) < 1e-4 || Math.abs(value) >= 1e6) {
-    const [m, e] = value.toExponential(5).split("e");
-    return `${Number(m)}\\cdot10^{${Number(e)}}`;
-  }
-  return String(Number(value.toPrecision(7)));
-};
-const polinomio = (coefs: number[]) =>
-  coefs
-    .flatMap((value, i) => {
-      if (value === 0) return [];
-      const power = coefs.length - 1 - i;
-      const coefficient =
-        power && Math.abs(value) === 1 ? (value < 0 ? "-" : "") : n(value);
-      return [
-        `${coefficient}${power === 0 ? "" : power === 1 ? "s" : `s^{${power}}`}`,
-      ];
-    })
-    .join(" + ")
-    .replaceAll("+ -", "- ") || "0";
-const tf = (f: FuncaoTransferencia) =>
-  `\\frac{${polinomio(f.num)}}{${polinomio(f.den)}}`;
+import {
+  numeroLatex as n,
+  tfLatex as tf,
+  METODOS_DISCRETOS,
+  equacaoDiferencas,
+} from "../../lib/controladores/formatacao";
+import { MemoriaPrimeiraOrdem } from "./PassosPrimeiraOrdem";
+import { LISTAS_CONTROLADORES } from "../../lib/controladores/exemplos";
 
 function GraficoImpresso({ resolucao }: { resolucao: ResolucaoImpressao }) {
   const { resposta: s, projeto: p, id } = resolucao;
@@ -131,9 +114,8 @@ function Pagina({
         <p>DCA-3701.0 · Projeto de sistemas de controle · 2026.2</p>
         <p>
           <strong>
-            {resolucao.id === "manual"
-              ? "Projeto de controlador"
-              : "1º Exercício da 2ª Unidade"}{" "}
+            {LISTAS_CONTROLADORES.find((l) => l.id === resolucao.lista)
+              ?.titulo ?? "Projeto de controlador"}{" "}
             · Eugenio Lopes
           </strong>
         </p>
@@ -155,6 +137,7 @@ export default function RelatorioImpressao({
 }: {
   resolucoes: ResolucaoImpressao[];
 }) {
+  const total = resolucoes.reduce((s, r) => s + quantidadePaginas(r), 0);
   return (
     <section
       className="relatorio-impressao"
@@ -165,7 +148,11 @@ export default function RelatorioImpressao({
         const e = r.entrada.especificacao;
         const integral = r.entrada.topologia !== "PD",
           zeros = r.entrada.topologia === "PID" ? 2 : 1;
-        const distancia = Math.hypot(r.sd.re + r.z, r.sd.im);
+        const distancia =
+          r.tipo === "classico" ? Math.hypot(r.sd.re + r.z, r.sd.im) : 0;
+        const primeiraPagina =
+          1 +
+          resolucoes.slice(0, i).reduce((s, r) => s + quantidadePaginas(r), 0);
         const soma = (tipo: "zero" | "polo") =>
           r.parcelas
             .filter((p) => p.tipo === tipo)
@@ -183,11 +170,7 @@ export default function RelatorioImpressao({
           .join("; ");
         return (
           <div className="questao-impressa" key={resolucao.id}>
-            <Pagina
-              resolucao={resolucao}
-              pagina={2 * i + 1}
-              total={2 * resolucoes.length}
-            >
+            <Pagina resolucao={resolucao} pagina={primeiraPagina} total={total}>
               <section>
                 <p>{resolucao.enunciado}</p>
                 <Formula
@@ -229,51 +212,73 @@ export default function RelatorioImpressao({
                   </p>
                 )}
               </section>
-              <section>
-                <h3>2. Aplicar o critério do ângulo</h3>
-                <Formula latex={`G(s)H(s)=${tf(r.GH)}`} />
-                <Formula
-                  latex={`\\theta_{GH}=${n(r.faseGanho)}^\\circ+${n(soma("zero"))}^\\circ-${n(soma("polo"))}^\\circ\\equiv${n(r.faseGH)}^\\circ`}
-                />
-                <p>
-                  Somam-se os ângulos dos zeros e subtraem-se os dos polos,
-                  usando atan2 para preservar os quadrantes.
-                </p>
-                {integral && (
+              {r.tipo === "primeiraOrdem" ? (
+                <section>
+                  <h3>2. Calcular os parâmetros reais a e b</h3>
+                  <MemoriaPrimeiraOrdem r={r} />
                   <Formula
-                    latex={`\\angle s_d=${n(r.faseIntegral)}^\\circ\\quad\\text{(polo do controlador na origem)}`}
+                    latex={`G_c(s)=${tf(r.Gc)},\\qquad s_p=${n(-r.b)}`}
                   />
-                )}
-                <Formula
-                  latex={`${zeros}\\alpha\\equiv180^\\circ-\\theta_{GH}${integral ? "+\\angle s_d" : ""}\\pmod{360^\\circ},\\quad\\alpha=${n(r.alfa)}^\\circ`}
-                />
-              </section>
-              <section>
-                <h3>3. Calcular o zero real e o ganho</h3>
-                <Formula
-                  latex={`z=\\frac{\\operatorname{Im}s_d}{\\tan\\alpha}-\\operatorname{Re}s_d=\\frac{${n(r.sd.im)}}{\\tan(${n(r.alfa)}^\\circ)}-(${n(r.sd.re)})=${n(r.z)}`}
-                />
-                <Formula
-                  latex={`s_z=${n(-r.z)}${zeros === 2 ? "\\quad\\text{(zero duplo)}" : ""},\\quad|s_d+z|=${n(distancia)},\\quad|GH(s_d)|=${n(r.moduloGH)}`}
-                />
-                <Formula
-                  latex={`K_c=\\frac{${integral ? "|s_d|" : "1"}}{|s_d+z|${zeros === 2 ? "^2" : ""}\\,|GH(s_d)|}=\\frac{${integral ? n(Math.hypot(r.sd.re, r.sd.im)) : "1"}}{${n(distancia)}^{${zeros}}\\cdot${n(r.moduloGH)}}=${n(r.Kc)}`}
-                />
-              </section>
+                </section>
+              ) : (
+                <>
+                  <section>
+                    <h3>2. Aplicar o critério do ângulo</h3>
+                    <Formula latex={`G(s)H(s)=${tf(r.GH)}`} />
+                    <Formula
+                      latex={`\\theta_{GH}=${n(r.faseGanho)}^\\circ+${n(soma("zero"))}^\\circ-${n(soma("polo"))}^\\circ\\equiv${n(r.faseGH)}^\\circ`}
+                    />
+                    <p>
+                      Somam-se os ângulos dos zeros e subtraem-se os dos polos,
+                      usando atan2 para preservar os quadrantes.
+                    </p>
+                    {integral && (
+                      <Formula
+                        latex={`\\angle s_d=${n(r.faseIntegral)}^\\circ\\quad\\text{(polo do controlador na origem)}`}
+                      />
+                    )}
+                    <Formula
+                      latex={`${zeros}\\alpha\\equiv180^\\circ-\\theta_{GH}${integral ? "+\\angle s_d" : ""}\\pmod{360^\\circ},\\quad\\alpha=${n(r.alfa)}^\\circ`}
+                    />
+                  </section>
+                  <section>
+                    <h3>3. Calcular o zero real e o ganho</h3>
+                    <Formula
+                      latex={`z=\\frac{\\operatorname{Im}s_d}{\\tan\\alpha}-\\operatorname{Re}s_d=\\frac{${n(r.sd.im)}}{\\tan(${n(r.alfa)}^\\circ)}-(${n(r.sd.re)})=${n(r.z)}`}
+                    />
+                    <Formula
+                      latex={`s_z=${n(-r.z)}${zeros === 2 ? "\\quad\\text{(zero duplo)}" : ""},\\quad|s_d+z|=${n(distancia)},\\quad|GH(s_d)|=${n(r.moduloGH)}`}
+                    />
+                    <Formula
+                      latex={`K_c=\\frac{${integral ? "|s_d|" : "1"}}{|s_d+z|${zeros === 2 ? "^2" : ""}\\,|GH(s_d)|}=\\frac{${integral ? n(Math.hypot(r.sd.re, r.sd.im)) : "1"}}{${n(distancia)}^{${zeros}}\\cdot${n(r.moduloGH)}}=${n(r.Kc)}`}
+                    />
+                  </section>
+                </>
+              )}
             </Pagina>
             <Pagina
               resolucao={resolucao}
-              pagina={2 * i + 2}
-              total={2 * resolucoes.length}
+              pagina={primeiraPagina + 1}
+              total={total}
             >
               <section>
                 <h3>4. Escrever o controlador final</h3>
-                <Formula
-                  latex={`G_c(s)=K_c\\frac{(s+z)${zeros === 2 ? "^2" : ""}}{${integral ? "s" : "1"}}=${tf(r.Gc)}`}
-                />
-                <Formula
-                  latex={`K_p=${n(r.Kp)},\\qquad K_i=${n(r.Ki)},\\qquad K_d=${n(r.Kd)}`}
-                />
+                {r.tipo === "classico" ? (
+                  <>
+                    <Formula
+                      latex={`G_c(s)=K_c\\frac{(s+z)${zeros === 2 ? "^2" : ""}}{${integral ? "s" : "1"}}=${tf(r.Gc)}`}
+                    />
+                    <Formula
+                      latex={`K_p=${n(r.Kp)},\\qquad K_i=${n(r.Ki)},\\qquad K_d=${n(r.Kd)}`}
+                    />
+                  </>
+                ) : (
+                  <Formula
+                    latex={`G_c(s)=${tf(r.Gc)},\\quad a=${n(r.a)},\\quad b=${n(r.b)}`}
+                  />
+                )}
+                {r.tipo === "primeiraOrdem" &&
+                  r.avisos.map((aviso) => <p key={aviso}>{aviso}</p>)}
               </section>
               <section>
                 <h3>5. Fechar a malha e verificar os polos</h3>
@@ -355,9 +360,123 @@ export default function RelatorioImpressao({
                 </p>
               </section>
             </Pagina>
+            {resolucao.discretizacao && (
+              <Pagina
+                resolucao={resolucao}
+                pagina={primeiraPagina + 2}
+                total={total}
+              >
+                <DiscretizacaoImpressa
+                  discretizacao={resolucao.discretizacao}
+                />
+              </Pagina>
+            )}
           </div>
         );
       })}
     </section>
+  );
+}
+
+function DiscretizacaoImpressa({
+  discretizacao: d,
+}: {
+  discretizacao: NonNullable<ResolucaoImpressao["discretizacao"]>;
+}) {
+  const c = d.configuracao,
+    p = d.calculo;
+  const metodo = METODOS_DISCRETOS[c.metodo];
+  return (
+    <>
+      <section>
+        <h3>7. Discretizar a função pedida</h3>
+        <p>
+          Função selecionada:{" "}
+          {c.alvo === "Gc"
+            ? "controlador Gc(s)"
+            : "malha aberta completa Gc(s)G(s)H(s)"}
+          . Método: {metodo?.nome ?? "inválido"}. Período de amostragem:{" "}
+          {numeroImpresso(c.periodo)} s.
+        </p>
+        <Formula
+          latex={`s\\leftarrow ${metodo?.substituicao ?? "\\text{método inválido}"},\\qquad T=${n(c.periodo)}\\,\\mathrm{s}`}
+        />
+        {d.erro && <p>Discretização não confirmada: {d.erro}</p>}
+        {p && (
+          <>
+            <div className="tf-impressa">
+              <Formula latex={`F(s)=${tf(p.continua)}`} />
+            </div>
+            <p>
+              Substituímos s em todas as potências do numerador e denominador,
+              eliminamos os denominadores comuns e normalizamos pelo primeiro
+              coeficiente do denominador.
+            </p>
+            <div className="tf-impressa">
+              <Formula
+                latex={`${c.alvo === "Gc" ? "G_c" : "L"}(z)=${tf(p.resultado, "z")}`}
+              />
+            </div>
+            <p>Coeficientes em ordem decrescente de potência de z.</p>
+            <p className="mono">
+              Numerador:{" "}
+              {p.resultado.num.map((v) => numeroImpresso(v)).join("; ")}
+            </p>
+            <p className="mono">
+              Denominador:{" "}
+              {p.resultado.den.map((v) => numeroImpresso(v)).join("; ")}
+            </p>
+          </>
+        )}
+      </section>
+      {p && (
+        <>
+          <section>
+            <h3>8. Equação de diferenças e causalidade</h3>
+            <p>
+              e[k] é a entrada da função selecionada e u[k] é a saída. Dividindo
+              a função em z pela maior potência do denominador e voltando ao
+              domínio das amostras:
+            </p>
+            <div className="equacao-discreta-impressa">
+              <Formula latex={equacaoDiferencas(p.resultado, true)} />
+            </div>
+            <p>
+              {p.resultado.causal
+                ? "A equação é causal, sem amostras futuras da entrada."
+                : `A equação exige ${p.resultado.avanco} amostra(s) futura(s) da entrada e não é causal.`}
+            </p>
+          </section>
+          <section>
+            <h3>9. Verificar os polos discretos</h3>
+            <p>
+              Polos da função selecionada:{" "}
+              {p.polos.length
+                ? p.polos
+                    .map(
+                      (polo) =>
+                        `${numeroImpresso(polo.re)}${Math.abs(polo.im) < 1e-8 ? "" : ` ${polo.im > 0 ? "+" : "−"} ${numeroImpresso(Math.abs(polo.im))}j`}`,
+                    )
+                    .join("; ")
+                : "não possui polos"}
+              .
+            </p>
+            <p>
+              {p.estabilidade === "estavel"
+                ? "Todos os polos estão dentro do círculo unitário. A função discretizada é assintoticamente estável."
+                : p.estabilidade === "instavel"
+                  ? "Há polos fora do círculo unitário. A função discretizada não é assintoticamente estável."
+                  : "Há polos sobre o círculo unitário, dentro da tolerância numérica. A função discretizada não é assintoticamente estável."}
+            </p>
+            <p>
+              A estabilidade aqui é da função discretizada selecionada, sem
+              fechar uma malha digital. Uma aproximação de uma função contínua
+              estável pode ter polos fora do círculo unitário, dependendo do
+              método e do período.
+            </p>
+          </section>
+        </>
+      )}
+    </>
   );
 }

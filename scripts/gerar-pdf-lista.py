@@ -21,10 +21,16 @@ from scipy.signal import step
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "entregas"
 DEST.mkdir(exist_ok=True)
-DATA = json.loads(subprocess.run(
-    ["node", "scripts/exportar-lista.mjs"], cwd=ROOT,
-    capture_output=True, text=True, check=True,
-).stdout)
+DATA = None
+
+
+def export_data(lista="lista1"):
+    return json.loads(subprocess.run(
+        ["node", "scripts/exportar-lista.mjs", lista], cwd=ROOT,
+        capture_output=True, text=True, check=True,
+    ).stdout)
+
+
 W, H = 595.276, 841.89
 INK, MUTED, BLUE, LINE = "#0f172a", "#475569", "#175c8c", "#cbd5e1"
 plt.rcParams.update({
@@ -48,35 +54,35 @@ def complex_text(p):
     return f'{number(p["re"])} {"+" if p["im"] > 0 else "−"} {number(abs(p["im"]))}j'
 
 
-def polynomial(coefs):
+def polynomial(coefs, variable="s"):
     terms = []
     for i, c in enumerate(coefs):
         if abs(c) < 1e-10:
             continue
         power = len(coefs) - 1 - i
         coefficient = "" if power and abs(c - 1) < 1e-10 else number(abs(c))
-        variable = "" if power == 0 else "s" if power == 1 else f"s^{{{power}}}"
+        term_variable = "" if power == 0 else variable if power == 1 else f"{variable}^{{{power}}}"
         sign = "-" if c < 0 else "+" if terms else ""
-        terms.append(sign + coefficient + variable)
+        terms.append(sign + coefficient + term_variable)
     return "".join(terms) or "0"
 
 
-def transfer(tf):
-    return rf'\frac{{{polynomial(tf["num"])}}}{{{polynomial(tf["den"])}}}'
+def transfer(tf, variable="s"):
+    return rf'\frac{{{polynomial(tf["num"], variable)}}}{{{polynomial(tf["den"], variable)}}}'
 
 
 class Page:
-    def __init__(self, question, part, page_number):
+    def __init__(self, question, part, page_number, *, titulo=None, total=8, unidade="1º", autor="Eugenio Lopes"):
         self.fig = plt.figure(figsize=(W / 72, H / 72), facecolor="white")
         self.question = question
         self.text(43, "DCA-3701.0  ·  Projeto de sistemas de controle  ·  2026.2", size=10, color=MUTED)
-        self.text(64, "1º Exercício da 2ª Unidade  ·  Eugenio Lopes", size=11, weight="bold")
+        self.text(64, f"{unidade} Exercício da 2ª Unidade  ·  {autor}", size=11, weight="bold")
         self.line(84)
-        self.text(110, f'Questão {question}  ·  {DATA["questoes"][question - 1]["projeto"]["entrada"]["topologia"]}', size=19, weight="bold")
+        self.text(110, titulo or f'Questão {question}  ·  {DATA["questoes"][question - 1]["projeto"]["entrada"]["topologia"]}', size=19, weight="bold")
         self.text(142, part, size=10, color=MUTED)
         self.line(790)
         self.text(805, "Resolução com o aplicativo LGR e projeto de controladores", size=8, color=MUTED)
-        self.fig.text((W - 43) / W, 1 - 805 / H, f"{page_number}/8", fontsize=8, ha="right", va="top", color=MUTED)
+        self.fig.text((W - 43) / W, 1 - 805 / H, f"{page_number}/{total}", fontsize=8, ha="right", va="top", color=MUTED)
 
     def line(self, y):
         self.fig.add_artist(Line2D([43 / W, (W - 43) / W], [1 - y / H] * 2,
@@ -272,9 +278,10 @@ def validation_page(q, i, pdf):
     page.finish(pdf)
 
 
-def verify():
+def verify(data=None):
+    data = DATA if data is None else data
     errors = []
-    for q in DATA["questoes"]:
+    for q in data["questoes"]:
         p, response = q["projeto"], q["resposta"]
         t = np.array(response["t"])
         _, independent = step((p["fechada"]["num"], p["fechada"]["den"]), T=t)
@@ -295,11 +302,12 @@ def verify():
         if q["id"] == "q3":
             assert abs(p["sd"]["re"] + 4) < 1e-12 and abs(p["sd"]["im"] - 4) < 1e-12
         errors.append({"questao": q["id"], "erroMaximoCurvaSciPy": error})
-    DATA["verificacaoIndependente"] = errors
+    data["verificacaoIndependente"] = errors
     return errors
 
 
 if __name__ == "__main__":
+    DATA = export_data()
     errors = verify()
     path = DEST / "lista_2a_unidade_Eugenio_Santo.pdf"
     with PdfPages(path, metadata={

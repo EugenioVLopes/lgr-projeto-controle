@@ -1,6 +1,24 @@
 import { multiplicarPolinomios, somarPolinomios } from "../lgr";
-import { limparPolinomio, validarTf, type FuncaoTransferencia } from "./index";
+import {
+  limparPolinomio,
+  validarTf,
+  raizesVerificadas,
+  type FuncaoTransferencia,
+  type ResultadoProjeto,
+} from "./index";
 export type MetodoDiscreto = "forward" | "backward" | "tustin";
+export interface ConfiguracaoDiscreta {
+  alvo: "Gc" | "malha";
+  metodo: MetodoDiscreto;
+  periodo: number;
+}
+export interface DiscretizacaoProjeto {
+  configuracao: ConfiguracaoDiscreta;
+  continua: FuncaoTransferencia;
+  resultado: ResultadoDiscreto;
+  polos: ReturnType<typeof raizesVerificadas>;
+  estabilidade: "estavel" | "instavel" | "marginal";
+}
 export interface ResultadoDiscreto extends FuncaoTransferencia {
   metodo: MetodoDiscreto;
   periodo: number;
@@ -19,6 +37,8 @@ export function discretizar(
   periodo: number,
   metodo: MetodoDiscreto,
 ): ResultadoDiscreto {
+  if (!["forward", "backward", "tustin"].includes(metodo))
+    throw new Error("Escolha Euler forward, Euler backward ou Tustin.");
   if (!Number.isFinite(periodo) || periodo <= 0)
     throw new Error("O período de amostragem deve ser positivo e finito.");
   const { num, den } = validarTf(tf);
@@ -62,5 +82,30 @@ export function discretizar(
     coefSaida: d,
     coefEntrada: [...new Array(Math.max(0, d.length - n.length)).fill(0), ...n],
     avanco,
+  };
+}
+
+export function discretizarProjeto(
+  r: ResultadoProjeto,
+  c: ConfiguracaoDiscreta,
+): DiscretizacaoProjeto {
+  if (c.alvo !== "Gc" && c.alvo !== "malha")
+    throw new Error(
+      "Escolha o controlador ou a malha aberta completa para discretizar.",
+    );
+  const continua = c.alvo === "Gc" ? r.Gc : r.malha;
+  const resultado = discretizar(continua, c.periodo, c.metodo);
+  const polos = raizesVerificadas(resultado.den);
+  const modulos = polos.map((p) => Math.hypot(p.re, p.im));
+  return {
+    configuracao: { ...c },
+    continua,
+    resultado,
+    polos,
+    estabilidade: modulos.some((m) => m > 1 + 1e-8)
+      ? "instavel"
+      : modulos.some((m) => m >= 1 - 1e-8)
+        ? "marginal"
+        : "estavel",
   };
 }

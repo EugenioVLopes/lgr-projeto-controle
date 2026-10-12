@@ -7,7 +7,16 @@ import {
   type ResultadoProjeto,
   type Topologia,
 } from "../../lib/controladores";
-import { EXERCICIOS_CONTROLADORES } from "../../lib/controladores/exemplos";
+import {
+  LISTAS_CONTROLADORES,
+  TODOS_EXERCICIOS_CONTROLADORES,
+  type ListaControladores,
+} from "../../lib/controladores/exemplos";
+import {
+  DISCRETIZACAO_INICIAL,
+  configuracaoDiscreta,
+  type DadosDiscretizacao,
+} from "./dadosDiscretizacao";
 import ResultadoControlador from "./ResultadoControlador";
 import RelatorioImpressao from "./RelatorioImpressao";
 import {
@@ -44,6 +53,11 @@ function coeficientes(texto: string, nome: string) {
 }
 export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
   const [dados, setDados] = useState<Dados>(vazio);
+  const [lista, setLista] = useState<ListaControladores>("lista1");
+  const exemplos = LISTAS_CONTROLADORES.find((l) => l.id === lista)!.exercicios;
+  const [discretizacao, setDiscretizacao] = useState<DadosDiscretizacao>(
+    DISCRETIZACAO_INICIAL,
+  );
   const [exercicio, setExercicio] = useState("");
   const [completa, setCompleta] = useState(false);
   const [resultado, setResultado] = useState<ResultadoProjeto | null>(null);
@@ -54,21 +68,29 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
   const atual = useMemo(() => {
     if (!resultado) return [];
     try {
-      return [criarResolucaoImpressao(resultado, exercicio)];
+      return [
+        criarResolucaoImpressao(
+          resultado,
+          exercicio,
+          discretizacao.incluir
+            ? configuracaoDiscreta(discretizacao)
+            : undefined,
+        ),
+      ];
     } catch {
       return [];
     }
-  }, [resultado, exercicio]);
+  }, [resultado, exercicio, discretizacao]);
   useEffect(() => {
     const restaurar = () => setImpressao(null);
     window.addEventListener("afterprint", restaurar);
     return () => window.removeEventListener("afterprint", restaurar);
   }, []);
-  async function imprimir(lista: boolean) {
+  async function imprimir(completa: boolean) {
     setPreparandoImpressao(true);
     setErroImpressao(null);
     try {
-      const resolucoes = lista ? resolverListaParaEntrega() : atual;
+      const resolucoes = completa ? resolverListaParaEntrega(lista) : atual;
       if (!resolucoes.length)
         throw new Error("Projete o controlador antes de imprimir a resolução.");
       // Monta o documento antes de abrir o diálogo. KaTeX e fontes devem
@@ -107,7 +129,16 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
     setExercicio(id);
     setResultado(null);
     setErro(null);
-    const ex = EXERCICIOS_CONTROLADORES.find((e) => e.id === id);
+    const ex = TODOS_EXERCICIOS_CONTROLADORES.find((e) => e.id === id);
+    setDiscretizacao(
+      ex?.discretizacao
+        ? {
+            ...ex.discretizacao,
+            periodo: String(ex.discretizacao.periodo),
+            incluir: true,
+          }
+        : DISCRETIZACAO_INICIAL,
+    );
     if (!ex) {
       setDados(vazio);
       return;
@@ -201,10 +232,26 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
       <div className="conteudo-controladores">
         <h2>Projeto de controladores pelo LGR</h2>
         <p className="ajuda">
-          Defina o desempenho desejado, calcule PD, PI ou PID e confira a
-          resposta da malha fechada. Exercícios da segunda unidade de 2026.2.
+          Defina G(s), H(s) e o desempenho desejado. Projete PD, PI, PID ou
+          a/(s+b), confira a resposta completa e discretize o resultado.
         </p>
         <form className="card no-print formulario-projeto" onSubmit={projetar}>
+          <label>
+            Lista
+            <select
+              value={lista}
+              onChange={(e) => {
+                setLista(e.target.value as ListaControladores);
+                selecionar("");
+              }}
+            >
+              {LISTAS_CONTROLADORES.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.titulo}
+                </option>
+              ))}
+            </select>
+          </label>
           <label>
             Exercício
             <select
@@ -212,7 +259,7 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
               onChange={(e) => selecionar(e.target.value)}
             >
               <option value="">Entrada manual</option>
-              {EXERCICIOS_CONTROLADORES.map((e) => (
+              {exemplos.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.titulo}
                 </option>
@@ -221,11 +268,8 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
           </label>
           {exercicio && (
             <p className="ajuda">
-              {
-                EXERCICIOS_CONTROLADORES.find((e) => e.id === exercicio)
-                  ?.enunciado
-              }{" "}
-              Os campos podem ser alterados.
+              {exemplos.find((e) => e.id === exercicio)?.enunciado} Os campos
+              podem ser alterados.
             </p>
           )}
           <fieldset>
@@ -266,6 +310,7 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
               <option value="PD">PD · Kc(s + z)</option>
               <option value="PI">PI · Kc(s + z)/s</option>
               <option value="PID">PID · Kc(s + z)²/s, zeros iguais</option>
+              <option value="primeiraOrdem">Primeira ordem · a/(s + b)</option>
             </select>
           </label>
           <fieldset>
@@ -353,8 +398,9 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
               : "Imprimir lista completa / salvar PDF"}
           </button>
           <p className="ajuda">
-            As quatro questões no formato das entregas. A questão 1 inclui o
-            ajuste do fator de frequência para 1,10.
+            {lista === "lista1"
+              ? "As quatro questões da primeira lista. A questão 1 inclui o ajuste do fator de frequência para 1,10."
+              : "As duas questões da segunda lista, com Tustin e Euler forward. Os requisitos não atendidos são indicados no documento."}
           </p>
         </div>
         {erroImpressao && (
@@ -370,6 +416,8 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
             ativo={ativo}
             aoImprimir={() => void imprimir(false)}
             preparandoImpressao={preparandoImpressao}
+            discretizacao={discretizacao}
+            aoEditarDiscretizacao={setDiscretizacao}
           />
         ) : (
           <p className="ajuda">

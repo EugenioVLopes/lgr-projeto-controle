@@ -18,7 +18,7 @@ export function useImpressaoPassos(unidade: 1 | 2) {
         const paginas = painel.querySelectorAll(".pagina-resolucao");
         if (paginas.length)
           document.title =
-            paginas.length > 2
+            painel.querySelectorAll(".questao-impressa").length > 1
               ? "Resolução da lista da segunda unidade"
               : `${paginas[0].querySelector("h2")?.textContent} · resolução`;
       }

@@ -15,7 +15,7 @@ export default defineConfig({
         name: "LGR e projeto de controladores",
         short_name: "Controle",
         description:
-          "LGR e projeto de PD, PI e PID para as duas unidades de DCA-3701 UFRN",
+          "LGR, PD, PI, PID e controladores a/(s+b) para DCA-3701 UFRN",
         theme_color: "#0f172a",
         background_color: "#ffffff",
         display: "standalone",

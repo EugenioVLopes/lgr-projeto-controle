@@ -25,3 +25,7 @@ dist-ssr
 
 # Scratch / issues locais (nao versionar)
 .scratch/
+
+# Cache dos geradores de PDF em Python
+__pycache__/
+*.pyc
