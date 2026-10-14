@@ -143,12 +143,36 @@ GH = [
     r"G(s)H(s)=\frac{s+4}{(s+2)^2}",
     r"G(s)H(s)=\frac{2}{(s+10)(s^2+2s+2)}",
 ]
-ANGLES = [
-    r"\angle GH(s_d)=19.5206^\circ-126.2390^\circ-2(43.7702^\circ)",
-    r"\angle GH(s_d)=-166.0267^\circ-25.9114^\circ",
-    r"\angle GH(s_d)=90^\circ-2(116.5651^\circ)",
-    r"\angle GH(s_d)=-9.6334^\circ-70.3974^\circ-85.5356^\circ",
-]
+def memoria_criterios(p):
+    polos = [x for x in p["parcelas"] if x["tipo"] == "polo"]
+    zeros = [x for x in p["parcelas"] if x["tipo"] == "zero"]
+    integral = p["entrada"]["topologia"] != "PD"
+    duplo = p["entrada"]["topologia"] == "PID"
+    def resumo(parcelas, simbolo, campo):
+        grupos = {}
+        for i, x in enumerate(parcelas):
+            valor = number(x[campo], 4)
+            grupos.setdefault(valor, []).append(rf"{simbolo}_{{{i + 1}}}")
+        grau = r"^\circ" if campo == "angulo" else ""
+        return r",\quad ".join("=".join(rotulos) + "=" + valor + grau for valor, rotulos in grupos.items())
+    def juntar(*termos):
+        return r",\quad ".join(t for t in termos if t)
+    def produto(termos):
+        return r"\cdot ".join(termos) or "1"
+    angulos = [resumo(polos, r"\theta", "angulo"), juntar(resumo(zeros, r"\phi", "angulo"), rf"\theta_c={number(p['faseIntegral'], 4)}^\circ" if integral else "")]
+    soma_p = sum(x["angulo"] for x in polos) + (p["faseIntegral"] if integral else 0)
+    soma_z = sum(x["angulo"] for x in zeros)
+    alfa = r"2\alpha" if duplo else r"\alpha"
+    fase = rf"-{number(p['faseGanho'])}^\circ" if p["faseGanho"] else ""
+    condicao = rf"{number(soma_p, 4)}^\circ-({number(soma_z, 4)}^\circ+{alfa}){fase}\equiv180^\circ\quad\Rightarrow\quad\alpha={number(p['alfa'], 4)}^\circ"
+    origem = np.hypot(p["sd"]["re"], p["sd"]["im"])
+    distancia_zero = np.hypot(p["sd"]["re"] + p["z"], p["sd"]["im"])
+    distancias = [juntar(resumo(polos, "A", "distancia"), rf"A_c=|s_d|={number(origem, 4)}" if integral else ""), juntar(resumo(zeros, "B", "distancia"), rf"B_c=|s_d+z|={number(distancia_zero, 4)}")]
+    fator = abs(p["GH"]["den"][0] / p["GH"]["num"][0])
+    numerador = produto([rf"A_{{{i + 1}}}" for i in range(len(polos))] + (["A_c"] if integral else []))
+    denominador = produto([rf"B_{{{i + 1}}}" for i in range(len(zeros))] + ["B_c^2" if duplo else "B_c"])
+    ganho = rf"K_c={number(fator)}\cdot\frac{{{numerador}}}{{{denominador}}}={number(p['Kc'])}"
+    return [a for a in angulos if a], condicao, distancias, ganho
 
 
 def design_page(q, i, pdf):
@@ -163,8 +187,8 @@ def design_page(q, i, pdf):
         c, ts = (3, 4) if i == 0 else (4, 5)
         page.formula(328, rf"\omega_{{n,\min}}=\frac{{{c}}}{{\zeta\cdot{ts}}}={number(p['wnMin'])}\;\mathrm{{rad/s}}")
         if i == 0:
-            page.paragraph(372, "O projeto inicial resultou em ts(5%) = 4,135 s. Adota-se fator de frequência 1,10 para atender ao limite na resposta completa.", size=10, width=91)
-            page.formula(412, rf"\omega_n=1.10\,\omega_{{n,\min}}={number(p['wn'])}\;\mathrm{{rad/s}}", size=12)
+            page.paragraph(372, "Usa-se o fator de frequência 1, conforme os dados do exemplo. A resposta completa verifica os limites sem ajustar o polo automaticamente.", size=10, width=91)
+            page.formula(412, rf"\omega_n=\omega_{{n,\min}}={number(p['wn'])}\;\mathrm{{rad/s}}", size=12)
             page.formula(435, rf"s_d=-\zeta\omega_n+j\omega_n\sqrt{{1-\zeta^2}}={number(p['sd']['re'])}+j{number(p['sd']['im'])}", size=11.5)
         else:
             page.formula(374, rf"s_d=-\zeta\omega_n+j\omega_n\sqrt{{1-\zeta^2}}=-0.8+j{number(p['sd']['im'])}", size=12)
@@ -178,25 +202,15 @@ def design_page(q, i, pdf):
         page.paragraph(329, "O PI acrescenta um polo na origem. O fator comum s + 1 de G(s)H(s) se cancela na análise do lugar das raízes.", size=10, width=90)
     page.heading(457, 2, "Avaliar a malha e aplicar o critério do ângulo")
     page.formula(483, GH[i], size=13)
-    page.formula(529, ANGLES[i], size=11.5)
-    phase = number(p["faseGH"], 4)
-    modulus = number(p["moduloGH"], 9)
-    page.formula(556, rf"\angle GH(s_d)\equiv {phase}^\circ,\qquad |GH(s_d)|={modulus}", size=12)
-    if i < 2:
-        angle = rf"\alpha=180^\circ-\angle GH(s_d)={number(p['alfa'],4)}^\circ"
-    elif i == 2:
-        angle = rf"\alpha\equiv180^\circ-\angle GH(s_d)+135^\circ\equiv{number(p['alfa'],4)}^\circ"
-    else:
-        angle = rf"2\alpha\equiv180^\circ-\angle GH(s_d)+{number(p['faseIntegral'],4)}^\circ"
-    page.formula(584, angle, size=11.5)
-    if i == 3:
-        page.formula(612, rf"\alpha={number(p['alfa'],4)}^\circ\quad\mathrm{{por\ zero}}", size=11.5)
-    page.heading(646, 3, "Calcular o zero real e o ganho")
-    page.formula(674, rf"z=\frac{{\mathrm{{Im}}(s_d)}}{{\tan\alpha}}-\mathrm{{Re}}(s_d)={number(p['z'])}\quad\Rightarrow\quad s_z=-z", size=12)
-    kc = (r"\frac{1}{|s_d+z|\,|GH(s_d)|}" if i < 2 else
-          r"\frac{|s_d|}{|s_d+z|\,|GH(s_d)|}" if i == 2 else
-          r"\frac{|s_d|}{|s_d+z|^2\,|GH(s_d)|}")
-    page.formula(721, rf"K_c={kc}={number(p['Kc'])}", size=12)
+    angulos, condicao, distancias, ganho = memoria_criterios(p)
+    for j, formula in enumerate(angulos):
+        page.formula(523 + 23 * j, formula, size=11)
+    page.formula(575, condicao, size=11)
+    page.heading(611, 3, "Calcular o zero e o ganho pelas distâncias A e B")
+    page.formula(640, rf"z=\frac{{\mathrm{{Im}}(s_d)}}{{\tan\alpha}}-\mathrm{{Re}}(s_d)={number(p['z'])}", size=12)
+    for j, formula in enumerate(distancias):
+        page.formula(680 + 23 * j, formula, size=11)
+    page.formula(742, ganho, size=12)
     page.finish(pdf)
 
 
@@ -222,7 +236,7 @@ def validation_page(q, i, pdf):
     else:
         page.formula(349, "T(s)=" + transfer(p["fechada"]), size=11.8)
     if i == 0:
-        poles = "Polos: −0,825 ± 1,125610j e −2,590013. Todos têm parte real negativa."
+        poles = "Polos: " + "; ".join(complex_text(pole) for pole in p["polos"]) + "."
     elif i == 1:
         poles = "Polos: −0,35 ± 0,357071j. Assim, ωn = 0,5 rad/s e ζ = 0,7."
     elif i == 2:
@@ -231,19 +245,17 @@ def validation_page(q, i, pdf):
         poles = "Polos: −0,8 ± 1,561585j; −0,900392; −9,499608. Malha estável."
     page.text(396, poles, size=9.7)
     page.heading(429, 6, "Conferir o que a questão pede")
-    if i == 0:
-        rows = [("Sobressinal ≤ 10%", f"{decimal(s['mp'])}%  ·  atende"),
-                ("Acomodação de 5% < 4 s", f"{decimal(s['ts5'])} s  ·  atende")]
+    if i in (0, 3):
+        rows = [
+            (r["descricao"], f"{r['resultado']} · {'atende' if r['atende'] else 'não atende'}")
+            for r in q["requisitos"]
+        ]
     elif i == 1:
         rows = [("Fator de amortecimento ζ = 0,7", "0,7  ·  atende"),
                 ("Frequência natural ωn = 0,5 rad/s", "0,5 rad/s  ·  atende")]
     elif i == 2:
         rows = [("Par de polos −4 ± 4j", "−4 ± 4j  ·  atende"),
                 ("Controlador PI", "Kp = 7; Ki = 24  ·  atende")]
-    else:
-        rows = [("Sobressinal ≤ 20%", f"{decimal(s['mp'])}%  ·  atende"),
-                ("Acomodação de 2% < 5 s", f"{decimal(s['ts2'])} s  ·  atende"),
-                ("Zeros reais e iguais", "−2,048997  ·  multiplicidade 2")]
     page.table(456, rows)
     top = 548 if i == 3 else 528
     chart_height = 144 if i == 3 else 161
@@ -266,7 +278,7 @@ def validation_page(q, i, pdf):
     ax.legend(fontsize=8, loc="upper right", frameon=False)
     notes_y = top + chart_height + 44
     if i == 0:
-        notes = "Degrau unitário; valor final 1. A faixa sombreada é de ±5%. O ajuste de frequência de 1,10 mantém Mp abaixo de 10% e reduz ts para 3,680 s."
+        notes = f"Degrau unitário; valor final 1. A faixa sombreada é de ±5%. Com fator 1, ts = {decimal(s['ts5'])} s não atende ao limite de 4 s. O projeto preserva as especificações, sem ajuste automático."
     elif i == 1:
         notes = "O ganho estático é T(0) = 5,7088. A questão fixa ζ e ωn, sem exigir ganho unitário nem tempo de acomodação. O zero do PD altera a forma da resposta."
     elif i == 2:

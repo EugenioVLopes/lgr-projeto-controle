@@ -18,7 +18,6 @@ export interface ResolucaoImpressao {
   enunciado: string;
   projeto: ResultadoProjeto;
   resposta: RespostaDegrau;
-  inicial?: { projeto: ResultadoProjeto; resposta: RespostaDegrau };
   lista?: ListaControladores;
   discretizacao?: {
     configuracao: ConfiguracaoDiscreta;
@@ -102,26 +101,13 @@ export function resolverListaParaEntrega(
 ): ResolucaoImpressao[] {
   const encontrada = LISTAS_CONTROLADORES.find((l) => l.id === lista);
   if (!encontrada) throw new Error("Escolha a primeira ou a segunda lista.");
-  return encontrada.exercicios.map((exercicio, i) => {
+  return encontrada.exercicios.map((exercicio) => {
     const entrada = structuredClone(exercicio.entrada);
-    let inicial: ResolucaoImpressao["inicial"];
-    if (
-      lista === "lista1" &&
-      i === 0 &&
-      entrada.especificacao.modo === "mpTs"
-    ) {
-      const projeto = projetarControlador(structuredClone(entrada));
-      inicial = { projeto, resposta: simularDegrau(projeto.fechada, 20) };
-      entrada.especificacao.margem = 1.1;
-    }
-    return {
-      ...criarResolucaoImpressao(
-        projetarControlador(entrada),
-        exercicio.id,
-        exercicio.discretizacao,
-      ),
-      inicial,
-    };
+    return criarResolucaoImpressao(
+      projetarControlador(entrada),
+      exercicio.id,
+      exercicio.discretizacao,
+    );
   });
 }
 

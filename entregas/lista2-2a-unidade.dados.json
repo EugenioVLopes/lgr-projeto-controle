@@ -150,7 +150,7 @@
         "erroAngulo": 0,
         "erroModulo": 2.220446049250313e-16,
         "avisos": [
-          "O controlador ideal é impróprio. A discretização pode resultar em uma equação não causal.",
+          "O controlador ideal é impróprio.",
           "O polo é calculado por uma aproximação de segunda ordem. Confira os limites na resposta completa."
         ]
       },

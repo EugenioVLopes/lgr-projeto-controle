@@ -72,20 +72,22 @@ export function anguloMemoriaParaLatex(
   vetorIm: number,
   ang: number,
   decimais = 2,
+  mostrarVetor = true,
 ): string {
   const vetor = vetorParaLatex(vetorRe, vetorIm, decimais);
   const resultado = `${numFix(ang, decimais)}^{\\circ}`;
+  const inicio = `${rotulo} = ${mostrarVetor ? `\\angle(${vetor}) = ` : ""}`;
   if (Math.abs(vetorRe) < 1e-12) {
     const reto = vetorIm >= 0 ? "90.00" : "-90.00";
-    return `${rotulo} = \\angle(${vetor}) = ${numFix(Number(reto), decimais)}^{\\circ}`;
+    return `${inicio}${numFix(Number(reto), decimais)}^{\\circ}`;
   }
   const num = numFix(vetorIm, decimais);
   const den = numFix(vetorRe, decimais);
   const arco = `\\tan^{-1}\\left(\\frac{${num}}{${den}}\\right)`;
   if (vetorRe > 0) {
-    return `${rotulo} = \\angle(${vetor}) = ${arco} = ${resultado}`;
+    return `${inicio}${arco} = ${resultado}`;
   }
-  return `${rotulo} = \\angle(${vetor}) = 180^{\\circ} + ${arco} = ${resultado}`;
+  return `${inicio}${vetorIm < 0 ? "-180" : "180"}^{\\circ} + ${arco} = ${resultado}`;
 }
 
 export function distanciaParaLatex(

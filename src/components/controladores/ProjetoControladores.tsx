@@ -399,7 +399,7 @@ export default function ProjetoControladores({ ativo }: { ativo: boolean }) {
           </button>
           <p className="ajuda">
             {lista === "lista1"
-              ? "As quatro questões da primeira lista. A questão 1 inclui o ajuste do fator de frequência para 1,10."
+              ? "As quatro questões da primeira lista, com os dados dos enunciados. Os requisitos não atendidos são indicados no documento."
               : "As duas questões da segunda lista, com Tustin e Euler forward. Os requisitos não atendidos são indicados no documento."}
           </p>
         </div>

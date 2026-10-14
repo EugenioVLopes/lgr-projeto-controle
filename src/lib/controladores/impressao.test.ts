@@ -8,22 +8,27 @@ import {
 } from "./impressao";
 
 describe("resoluções impressas", () => {
-  it("resolve as quatro questões com o ajuste declarado e atende aos requisitos", () => {
+  it("resolve as quatro questões com as entradas originais e registra os limites não atendidos", () => {
     const lista = resolverListaParaEntrega();
     expect(lista.map((q) => q.id)).toEqual(["q1", "q2", "q3", "q4"]);
     for (const q of lista) {
-      expect(requisitosImpressao(q).every((c) => c.atende)).toBe(true);
+      expect(q.projeto.entrada).toEqual(
+        EXERCICIOS_CONTROLADORES.find((e) => e.id === q.id)!.entrada,
+      );
       expect(q.resposta.t).toHaveLength(4001);
       expect(q.resposta.horizonte).toBe(20);
     }
-    expect(lista[0].inicial!.resposta.ts5).toBeGreaterThan(4);
-    expect(lista[0].inicial!.projeto.entrada.especificacao).toMatchObject({
+    expect(lista[0].projeto.entrada.especificacao).toMatchObject({
       margem: 1,
     });
-    expect(lista[0].projeto.entrada.especificacao).toMatchObject({
-      margem: 1.1,
-    });
-    expect(lista[0].resposta.ts5).toBeCloseTo(3.68, 3);
+    expect(lista[0].resposta.ts5).toBeCloseTo(4.135, 3);
+    expect(requisitosImpressao(lista[0]).map((c) => c.atende)).toEqual([
+      true,
+      false,
+    ]);
+    for (const q of lista.slice(1)) {
+      expect(requisitosImpressao(q).every((c) => c.atende)).toBe(true);
+    }
     expect(EXERCICIOS_CONTROLADORES[0].entrada.especificacao).toMatchObject({
       margem: 1,
     });
@@ -32,8 +37,18 @@ describe("resoluções impressas", () => {
     const r = projetarControlador(EXERCICIOS_CONTROLADORES[0].entrada);
     const q = criarResolucaoImpressao(r, "q1");
     expect(q.projeto).toBe(r);
-    expect(q.inicial).toBeUndefined();
     expect(requisitosImpressao(q).map((c) => c.atende)).toEqual([true, false]);
+  });
+  it("preserva o fator de frequência informado manualmente no cálculo e na impressão", () => {
+    const entrada = structuredClone(EXERCICIOS_CONTROLADORES[0].entrada);
+    if (entrada.especificacao.modo !== "mpTs")
+      throw new Error("Exemplo inválido");
+    entrada.especificacao.margem = 1.2;
+    const projeto = projetarControlador(entrada);
+    const q = criarResolucaoImpressao(projeto, "q1");
+    expect(q.projeto.entrada.especificacao).toEqual(entrada.especificacao);
+    expect(q.projeto.wn).toBeCloseTo(projeto.wnMin! * 1.2, 12);
+    expect(q.projeto).toBe(projeto);
   });
   it("não inventa exigências de Mp ou acomodação nas questões 2 e 3", () => {
     const lista = resolverListaParaEntrega();

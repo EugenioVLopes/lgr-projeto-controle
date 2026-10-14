@@ -345,9 +345,7 @@ export function projetarControlador(entrada: EntradaProjeto): ResultadoProjeto {
       );
   }
   if (Gc.num.length > Gc.den.length)
-    avisos.push(
-      "O controlador ideal é impróprio. A discretização pode resultar em uma equação não causal.",
-    );
+    avisos.push("O controlador ideal é impróprio.");
   if (entrada.especificacao.modo === "mpTs")
     avisos.push(
       "O polo é calculado por uma aproximação de segunda ordem. Confira os limites na resposta completa.",

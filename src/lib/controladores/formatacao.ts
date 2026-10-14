@@ -1,5 +1,5 @@
 import type { FuncaoTransferencia } from "./index";
-import type { MetodoDiscreto, ResultadoDiscreto } from "./discretizacao";
+import type { MetodoDiscreto } from "./discretizacao";
 
 export const numeroLatex = (x: number): string => {
   if (!Number.isFinite(x)) return "\\text{não definido}";
@@ -33,36 +33,3 @@ export const METODOS_DISCRETOS: Record<
   backward: { nome: "Euler backward", substituicao: "\\frac{z-1}{Tz}" },
   tustin: { nome: "Tustin", substituicao: "\\frac{2}{T}\\frac{z-1}{z+1}" },
 };
-export function equacaoDiferencas(
-  d: ResultadoDiscreto,
-  quebrarLinhas = false,
-): string {
-  const termos = (
-    coefs: number[],
-    sinal: number,
-    variavel: string,
-    avanco = 0,
-  ) =>
-    coefs.flatMap((c, i) => {
-      if (c === 0) return [];
-      const deslocamento = avanco - i;
-      return [
-        `${numeroLatex(c * sinal)}${variavel}[k${deslocamento < 0 ? deslocamento : deslocamento > 0 ? `+${deslocamento}` : ""}]`,
-      ];
-    });
-  const juntar = (t: string[]) => t.join(" + ").replaceAll("+ -", "- ");
-  if (quebrarLinhas) {
-    const todos = [
-      ...termos(d.coefSaida.slice(1), -1, "u", -1),
-      ...termos(d.coefEntrada, 1, "e", d.avanco),
-    ];
-    const linhas: string[] = [];
-    for (let i = 0; i < todos.length; i += 3)
-      linhas.push(juntar(todos.slice(i, i + 3)));
-    return `\\begin{aligned}u[k]&=${linhas[0] || "0"}${linhas
-      .slice(1)
-      .map((l) => `\\\\ &\\quad + (${l})`)
-      .join("")}\\end{aligned}`;
-  }
-  return `u[k] = ${juntar(termos(d.coefSaida.slice(1), -1, "u", -1)) || "0"} + ${juntar(termos(d.coefEntrada, 1, "e", d.avanco)) || "0"}`;
-}

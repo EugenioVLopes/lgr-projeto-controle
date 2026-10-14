@@ -20,6 +20,8 @@ Para Mp e acomodação, a aproximação de segunda ordem usa `ζ = -ln(Mp/100)/s
 
 Para PD, PI e PID, o critério do ângulo determina z. O módulo determina Kc, incluindo os coeficientes originais da planta e da realimentação. Um zero em `s = -z` pode estar no semiplano direito se z for negativo; esse caso é identificado na resolução. O método requer polos desejados complexos e ganho Kc positivo. Uma topologia angularmente inviável gera uma mensagem para alterar o ponto ou a topologia.
 
+Os critérios usam a notação da primeira unidade: θ para os ângulos dos polos, φ para os zeros e A/B para suas distâncias. O índice c identifica o controlador. Os passos essenciais mostram os valores e o resultado; a memória completa abre os passos de cálculo, inclui arco-tangente com correção de quadrante e as raízes quadradas das distâncias. Parcelas iguais são agrupadas, e o resultado de cada especificação ou ganho aparece uma vez em sua derivação. A precisão numérica fica em um bloco separado. A impressão usa o detalhamento compacto.
+
 | Controlador | Forma      | Ganhos                          |
 | ----------- | ---------- | ------------------------------- |
 | PD          | Kc(s+z)    | Kp = Kc·z; Kd = Kc              |
@@ -52,7 +54,7 @@ A transformação é algébrica, por substituição polinomial, e aceita control
 | Euler backward | s = (z−1)/(Tz)       |
 | Tustin         | s = (2/T)(z−1)/(z+1) |
 
-O período T deve ser positivo. É possível discretizar Gc(s) ou a malha aberta completa. A saída mostra a função em z e a equação de diferenças. Se o grau do numerador discreto superar o do denominador, a equação exige amostras futuras e é identificada como não causal.
+O período T deve ser positivo. É possível discretizar Gc(s) ou a malha aberta completa. A saída mostra a função em z e a verificação dos polos discretos.
 
 Os polos discretos são comparados com o círculo unitário, com tolerância de 1e-8 no módulo. A estabilidade indicada é da função selecionada, não de uma malha digital fechada. Na questão 2 da segunda lista, Euler forward com T = 1 s produz polos de malha aberta fora do círculo unitário. O enunciado diz apenas "Euler"; adotamos forward no exemplo e permitimos selecionar backward.
 

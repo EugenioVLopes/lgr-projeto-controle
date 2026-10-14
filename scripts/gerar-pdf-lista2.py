@@ -37,12 +37,15 @@ def pid_design(data, pdf):
     page.paragraph(412, "Usa-se o fator de frequência 1 do exemplo do app. A aproximação de segunda ordem orienta o polo; a resposta completa deverá confirmar Mp e acomodação.", size=10, width=91)
     page.heading(470, 2, "Aplicar o critério do ângulo")
     page.formula(495, r"G(s)H(s)=\frac{5(s+3)}{s(s+4)(s+1)},\qquad G_c(s)=K_c\frac{(s+z)^2}{s}", size=12)
-    page.formula(544, rf"\angle GH(s_d)={n(p['faseGH'])}^\circ,\qquad\angle s_d={n(p['faseIntegral'])}^\circ", size=12)
-    page.formula(571, rf"2\alpha\equiv180^\circ-\angle GH(s_d)+\angle s_d,\quad\alpha={n(p['alfa'])}^\circ", size=11.5)
-    page.heading(616, 3, "Calcular o zero duplo e o ganho")
-    page.formula(643, rf"z=\frac{{\mathrm{{Im}}(s_d)}}{{\tan\alpha}}-\mathrm{{Re}}(s_d)={n(p['z'])}", size=12)
-    page.formula(690, rf"K_c=\frac{{|s_d|}}{{|s_d+z|^2\,|GH(s_d)|}}={n(p['Kc'])}", size=12)
-    page.formula(738, rf"G_c(s)={n(p['Kc'])}\frac{{(s+{n(p['z'])})^2}}{{s}}", size=12)
+    angulos, condicao, distancias, ganho = base.memoria_criterios(p)
+    for j, formula in enumerate(angulos):
+        page.formula(539 + 23 * j, formula, size=11)
+    page.formula(588, condicao, size=11)
+    page.heading(621, 3, "Calcular o zero duplo e o ganho pelas distâncias A e B")
+    page.formula(649, rf"z=\frac{{\mathrm{{Im}}(s_d)}}{{\tan\alpha}}-\mathrm{{Re}}(s_d)={n(p['z'])}", size=12)
+    for j, formula in enumerate(distancias):
+        page.formula(687 + 23 * j, formula, size=11)
+    page.formula(748, ganho, size=12)
     page.finish(pdf)
 
 
@@ -93,25 +96,11 @@ def pid_validation(data, pdf):
     page.finish(pdf)
 
 
-def difference_terms(coefs, variable, first_delay=0, multiplier=1):
-    terms = []
-    for i, c in enumerate(coefs):
-        if abs(c) < 1e-12:
-            continue
-        delay = first_delay + i
-        suffix = "k" if delay == 0 else f"k-{delay}"
-        sign = "-" if c * multiplier < 0 else "+" if terms else ""
-        terms.append(f"{sign}{n(abs(c))}{variable}[{suffix}]")
-    return "".join(terms) or "0"
-
-
 def discretization_page(data, index, pdf):
     q = data["questoes"][index]
     d = q["discretizacao"]["calculo"]
     c, result = d["configuracao"], d["resultado"]
-    if not result["causal"]:
-        raise ValueError("Esta entrega requer equação causal.")
-    page = new_page(data, index + 1, "Item b · Discretização e equação de diferenças", 3 if index == 0 else 6)
+    page = new_page(data, index + 1, "Item b · Discretização e polos discretos", 3 if index == 0 else 6)
     page.heading(165, 7, "Aplicar a substituição pedida")
     if index == 0:
         page.paragraph(192, "Discretizar apenas o controlador Gc(s), pelo método de Tustin, com período de amostragem de 2,0 s.")
@@ -125,16 +114,13 @@ def discretization_page(data, index, pdf):
         page.formula(292, rf"L(s)=\frac{{{n(2*q['projeto']['a'])}(s+1)(s+3)}}{{(s+{n(q['projeto']['b'])})(s^2+2s+2)(s+5)}}", size=12)
         page.formula(342, rf"L(z)=\frac{{{n(2*q['projeto']['a'])}z(z+2)}}{{(z+{n(q['projeto']['b']-1)})(z^2+1)(z+4)}}", size=12)
         page.paragraph(390, "Substituímos s em toda a malha aberta, incluindo H e Gc. A função discretizada abaixo é L(z), e não a transferência contínua de malha fechada T(s).", width=91, size=10)
-    page.heading(449, 8, "Normalizar a função e obter a recorrência")
+    page.heading(449, 8, "Normalizar a função em z")
     page.formula(476, ("G_c(z)=" if index == 0 else "L(z)=") + transfer(result, "z"), size=11)
-    page.paragraph(528, "Dividimos pela maior potência de z do denominador. e[k] é a entrada da função selecionada e u[k] é a saída. A equação é causal.", size=10, width=91)
-    page.formula(579, "u[k]=" + difference_terms(result["coefSaida"][1:], "u", 1, -1), size=11.5)
-    page.formula(612, "+(" + difference_terms(result["coefEntrada"], "e") + ")", size=11.5)
-    page.heading(656, 9, "Verificar os polos discretos")
-    page.paragraph(683, "Polos: " + "; ".join(base.complex_text(x) for x in d["polos"]) + ".", width=95, size=10)
+    page.heading(541, 8, "Verificar os polos discretos")
+    page.paragraph(572, "Polos: " + "; ".join(base.complex_text(x) for x in d["polos"]) + ".", width=95, size=10)
     note = ("Os polos +1 e −1 estão sobre o círculo unitário. O controlador discretizado não é assintoticamente estável isoladamente."
             if index == 0 else "Há polos fora do círculo unitário. A aproximação forward da malha aberta não é assintoticamente estável para este período.")
-    page.paragraph(718, note + " Esta análise não fecha nem simula uma malha digital.", width=95, size=9.8)
+    page.paragraph(615, note + " Esta análise não fecha nem simula uma malha digital.", width=95, size=9.8)
     page.finish(pdf)
 
 

@@ -43,6 +43,13 @@ describe("formatacao de memorias", () => {
     expect(latex).toContain("\\angle(p_k - p_1)");
     esperaKatexValido(latex);
   });
+  it("memória compacta omite o vetor intermediário e preserva o terceiro quadrante", () => {
+    const latex = anguloMemoriaParaLatex("\\theta_1", -1, -1, -135, 4, false);
+    expect(latex).not.toContain("\\angle(");
+    expect(latex).toContain("-180^{\\circ} +");
+    expect(latex).toContain("-135.0000");
+    esperaKatexValido(latex);
+  });
 
   it("distancia exibe dx, dy com sinal", () => {
     const latex = distanciaParaLatex("A", 1, -1.5, 2, 2.5);

@@ -1,6 +1,6 @@
 import Formula, { complexoParaLatex } from "../Formula";
 import type { ResultadoPrimeiraOrdem } from "../../lib/controladores";
-import { numeroImpresso } from "../../lib/controladores/impressao";
+import EspecificacoesProjeto from "./EspecificacoesProjeto";
 import { numeroLatex as n, tfLatex } from "../../lib/controladores/formatacao";
 
 export function MemoriaPrimeiraOrdem({ r }: { r: ResultadoPrimeiraOrdem }) {
@@ -8,7 +8,9 @@ export function MemoriaPrimeiraOrdem({ r }: { r: ResultadoPrimeiraOrdem }) {
     <>
       <Formula latex={`G(s)H(s)=${tfLatex(r.GH)}`} />
       <Formula latex={`V=G(s_d)H(s_d)=${complexoParaLatex(r.valorGH, 7)}`} />
-      <Formula latex="1+\\frac{a}{s_d+b}V=0\\quad\\Rightarrow\\quad s_d+b+aV=0" />
+      <Formula
+        latex={"1+\\frac{a}{s_d+b}V=0\\quad\\Rightarrow\\quad s_d+b+aV=0"}
+      />
       <p>
         Como a e b são reais, separamos as partes imaginária e real da equação
         característica.
@@ -38,20 +40,12 @@ export default function PassosPrimeiraOrdem({
           <Formula
             latex={`G(s)=${tfLatex(r.entrada.G)},\\quad H(s)=${tfLatex(r.entrada.H)}`}
           />
-          <Formula
-            latex={`G_c(s)=\\frac{a}{s+b},\\quad s_d=${complexoParaLatex(r.sd, 7)}`}
-          />
+          <Formula latex={"G_c(s)=\\frac{a}{s+b}"} />
           <p className="ajuda">
             O cálculo posiciona o par conjugado. Os demais polos e a resposta
             completa são verificados abaixo.
           </p>
-          {r.entrada.especificacao.modo === "mpTs" && (
-            <p className="ajuda">
-              ζ = {numeroImpresso(r.zeta)}; ωn = {numeroImpresso(r.wn)} rad/s,
-              pela aproximação de segunda ordem. Mp e acomodação devem ser
-              conferidos na simulação.
-            </p>
-          )}
+          <EspecificacoesProjeto r={r} completa={completa} />
         </div>
       </details>
       <details open>
@@ -62,7 +56,7 @@ export default function PassosPrimeiraOrdem({
           >
             <MemoriaPrimeiraOrdem r={r} />
           </div>
-          <Formula latex={`a=${n(r.a)},\\qquad b=${n(r.b)}`} />
+          {!completa && <Formula latex={`a=${n(r.a)},\\qquad b=${n(r.b)}`} />}
         </div>
       </details>
       <details open>

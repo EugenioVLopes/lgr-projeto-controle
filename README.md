@@ -9,7 +9,7 @@ Aplicativo para celular em React/TypeScript, com cálculos locais no navegador. 
 - Escolha entre passos essenciais e memória completa, com parcelas dos ângulos, distâncias, substituições e ganhos Kp, Ki e Kd ou parâmetros a e b.
 - LGR compensado, todos os polos de malha fechada e resposta ao degrau unitário.
 - Validação de Mp e acomodação em 2% ou 5%, com ajuste manual do fator de frequência.
-- Discretização de Gc(s) ou Gc(s)G(s)H(s) por forward, backward e Tustin, com equação de diferenças, causalidade e verificação dos polos discretos.
+- Discretização de Gc(s) ou Gc(s)G(s)H(s) por forward, backward e Tustin, com função em z e verificação dos polos discretos.
 - Impressão da resolução atual no formato das entregas, com enunciado, cálculos, polos, requisitos e gráfico vetorial, independente dos passos abertos na tela. Ctrl+P usa o projeto atual.
 - Botão para imprimir a lista selecionada em A4. A segunda lista inclui Tustin com T = 2 s na questão 1 e Euler forward com T = 1 s na questão 2.
 - A resolução atual pode incluir a configuração de discretização escolhida, com método, período e alvo editáveis. O projeto inicial da questão 1 da segunda lista não atende Mp e acomodação; a tela e a impressão indicam essa reprovação.

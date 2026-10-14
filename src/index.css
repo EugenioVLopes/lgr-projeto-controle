@@ -855,7 +855,13 @@ a {
     font-size: 8pt;
     color: #475569;
   }
+  .resposta-impressa {
+    font-size: 9pt;
+    line-height: 1.35;
+  }
   .rodape-resolucao {
+    break-inside: avoid;
+    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     gap: 4mm;

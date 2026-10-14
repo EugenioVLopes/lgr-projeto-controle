@@ -3,17 +3,101 @@ import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
 import RelatorioImpressao from "./RelatorioImpressao";
 import PassosPrimeiraOrdem from "./PassosPrimeiraOrdem";
+import { MemoriaAngulo, MemoriaModulo } from "./MemoriaCriterios";
+import ResultadoControlador from "./ResultadoControlador";
+import { DISCRETIZACAO_INICIAL } from "./dadosDiscretizacao";
 import {
   resolverListaParaEntrega,
   criarResolucaoImpressao,
 } from "../../lib/controladores/impressao";
 import { projetarControlador } from "../../lib/controladores";
-import { EXERCICIOS_LISTA2 } from "../../lib/controladores/exemplos";
+import {
+  EXERCICIOS_CONTROLADORES,
+  EXERCICIOS_LISTA2,
+} from "../../lib/controladores/exemplos";
 
 const paginas = (html: string) =>
   (html.match(/class="pagina-resolucao"/g) ?? []).length;
 
 describe("relatório das duas listas", () => {
+  it("a memória completa apresenta uma única derivação por especificação e evita repetir os ganhos em campos-resumo", () => {
+    for (const exemplo of [...EXERCICIOS_CONTROLADORES, ...EXERCICIOS_LISTA2]) {
+      const r = projetarControlador(exemplo.entrada);
+      const html = renderToStaticMarkup(
+        <ResultadoControlador
+          r={r}
+          completa
+          ativo={false}
+          aoImprimir={() => {}}
+          preparandoImpressao={false}
+          discretizacao={DISCRETIZACAO_INICIAL}
+          aoEditarDiscretizacao={() => {}}
+        />,
+      );
+      expect(html).not.toContain('class="ganhos-projeto"');
+      expect(html).not.toContain("Numerador:");
+      expect(html).not.toContain("Denominador:");
+      const formulas = [...html.matchAll(/aria-label="([^"]*)"/g)].map(
+        ([, latex]) => latex,
+      );
+      if (r.entrada.especificacao.modo === "mpTs") {
+        expect(
+          formulas.filter((latex) => latex.startsWith("\\zeta=")),
+        ).toHaveLength(1);
+        expect(
+          formulas.filter((latex) => latex.includes("\\omega_{n,\\min}=")),
+        ).toHaveLength(1);
+      }
+      if (r.entrada.especificacao.modo === "polo") {
+        expect(html).not.toContain("-\\zeta\\omega_n+j");
+      }
+    }
+  });
+  it("mantém os critérios compactos e reserva as contas intermediárias para a memória completa", () => {
+    for (const exemplo of [...EXERCICIOS_CONTROLADORES, ...EXERCICIOS_LISTA2]) {
+      const r = projetarControlador(exemplo.entrada);
+      if (r.tipo !== "classico") continue;
+      const essencial = renderToStaticMarkup(
+        <>
+          <MemoriaAngulo r={r} />
+          <MemoriaModulo r={r} />
+        </>,
+      );
+      const completa = renderToStaticMarkup(
+        <>
+          <MemoriaAngulo r={r} completa />
+          <MemoriaModulo r={r} completa />
+        </>,
+      );
+      expect(essencial).not.toContain("\\tan^{-1}");
+      expect(essencial).not.toContain("\\sqrt");
+      expect(completa).toContain("\\tan^{-1}");
+      expect(completa).toContain("\\sqrt");
+      expect(essencial.match(/class="formula"/g)!.length).toBeLessThanOrEqual(
+        6,
+      );
+      for (const html of [essencial, completa]) {
+        for (const [, formula] of html.matchAll(
+          /class="formula"[^>]*aria-label="([^"]*)"/g,
+        )) {
+          expect(() =>
+            katex.renderToString(
+              formula
+                .replaceAll("&amp;", "&")
+                .replaceAll("&quot;", '"')
+                .replaceAll("&#x27;", "'"),
+              { throwOnError: true },
+            ),
+          ).not.toThrow();
+        }
+      }
+      if (r.entrada.topologia === "PID") {
+        expect(essencial).toContain("B_c^2");
+        expect(essencial).toContain("A_c");
+        expect(essencial).toContain("2\\alpha");
+      }
+    }
+  });
   it("preserva as oito páginas da primeira lista e usa seis na segunda", () => {
     const antiga = renderToStaticMarkup(
       <RelatorioImpressao resolucoes={resolverListaParaEntrega()} />,
@@ -73,7 +157,8 @@ describe("relatório das duas listas", () => {
     if (r.tipo !== "primeiraOrdem") throw new Error("Tipo incorreto");
     const html = renderToStaticMarkup(<PassosPrimeiraOrdem r={r} completa />);
     expect(html).toContain("partes imaginária e real");
-    expect(html).toContain("a=3.799905");
+    expect(html).toContain("=-0.0805503 - 0.526329j");
+    expect(html).toContain("=3.799905");
     expect(html).not.toContain("K_p");
   });
 });

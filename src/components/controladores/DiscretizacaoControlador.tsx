@@ -9,7 +9,6 @@ import {
   numeroLatex as n,
   tfLatex,
   METODOS_DISCRETOS,
-  equacaoDiferencas,
 } from "../../lib/controladores/formatacao";
 
 import {
@@ -45,7 +44,7 @@ export default function DiscretizacaoControlador({
     d = p?.resultado;
   return (
     <details open={dados.incluir}>
-      <summary>Discretização e equação de diferenças</summary>
+      <summary>Discretização</summary>
       <div className="step-body">
         <div className="grid2 no-print">
           <label>
@@ -116,21 +115,13 @@ export default function DiscretizacaoControlador({
                 Substituímos s em cada potência, eliminamos os denominadores
                 comuns e normalizamos pelo primeiro coeficiente do denominador.
               </p>
-              <Formula latex={`F(s)=${tfLatex(p.continua)}`} />
+              {dados.alvo === "malha" && (
+                <Formula latex={`L(s)=${tfLatex(p.continua)}`} />
+              )}
             </div>
             <Formula
               latex={`${dados.alvo === "Gc" ? "G_c" : "L"}(z)=${tfLatex(d, "z")}`}
             />
-            <p className="ajuda">
-              e[k] é a entrada da função selecionada e u[k] é a saída.
-            </p>
-            <Formula latex={equacaoDiferencas(d)} />
-            {!d.causal && (
-              <p className="badge-warn">
-                Esta aproximação exige {d.avanco} amostra(s) futura(s) da
-                entrada. A equação não é causal.
-              </p>
-            )}
             <p
               className={
                 p.estabilidade === "estavel" ? "badge-ok" : "badge-warn"
@@ -156,11 +147,6 @@ export default function DiscretizacaoControlador({
                   latex={`z_{${i + 1}}=${complexoParaLatex(polo, 7)}`}
                 />
               ))}
-              <p className="mono">
-                Numerador: {d.num.map(n).join("; ")}
-                <br />
-                Denominador: {d.den.map(n).join("; ")}
-              </p>
             </div>
           </>
         )}

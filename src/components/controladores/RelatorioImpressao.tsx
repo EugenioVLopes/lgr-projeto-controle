@@ -10,9 +10,9 @@ import {
   numeroLatex as n,
   tfLatex as tf,
   METODOS_DISCRETOS,
-  equacaoDiferencas,
 } from "../../lib/controladores/formatacao";
 import { MemoriaPrimeiraOrdem } from "./PassosPrimeiraOrdem";
+import { MemoriaAngulo, MemoriaModulo } from "./MemoriaCriterios";
 import { LISTAS_CONTROLADORES } from "../../lib/controladores/exemplos";
 
 function GraficoImpresso({ resolucao }: { resolucao: ResolucaoImpressao }) {
@@ -148,15 +148,9 @@ export default function RelatorioImpressao({
         const e = r.entrada.especificacao;
         const integral = r.entrada.topologia !== "PD",
           zeros = r.entrada.topologia === "PID" ? 2 : 1;
-        const distancia =
-          r.tipo === "classico" ? Math.hypot(r.sd.re + r.z, r.sd.im) : 0;
         const primeiraPagina =
           1 +
           resolucoes.slice(0, i).reduce((s, r) => s + quantidadePaginas(r), 0);
-        const soma = (tipo: "zero" | "polo") =>
-          r.parcelas
-            .filter((p) => p.tipo === tipo)
-            .reduce((v, p) => v + p.angulo, 0);
         const escala = r.fechada.den[0];
         const normalizada = {
           num: r.fechada.num.map((v) => v / escala),
@@ -189,10 +183,9 @@ export default function RelatorioImpressao({
                     />
                     {e.margem > 1 && (
                       <p>
-                        Fator de frequência adotado: {numeroImpresso(e.margem)}.{" "}
-                        {resolucao.inicial
-                          ? `O projeto inicial deu ts(${e.faixa}%) = ${numeroImpresso(e.faixa === 2 ? resolucao.inicial.resposta.ts2 : resolucao.inicial.resposta.ts5, " s")}. O ajuste será conferido na resposta completa.`
-                          : "A resposta completa verifica os limites após o ajuste."}
+                        Fator de frequência informado:{" "}
+                        {numeroImpresso(e.margem)}. A resposta completa verifica
+                        os limites com esse fator.
                       </p>
                     )}
                   </>
@@ -225,33 +218,14 @@ export default function RelatorioImpressao({
                   <section>
                     <h3>2. Aplicar o critério do ângulo</h3>
                     <Formula latex={`G(s)H(s)=${tf(r.GH)}`} />
-                    <Formula
-                      latex={`\\theta_{GH}=${n(r.faseGanho)}^\\circ+${n(soma("zero"))}^\\circ-${n(soma("polo"))}^\\circ\\equiv${n(r.faseGH)}^\\circ`}
-                    />
-                    <p>
-                      Somam-se os ângulos dos zeros e subtraem-se os dos polos,
-                      usando atan2 para preservar os quadrantes.
-                    </p>
-                    {integral && (
-                      <Formula
-                        latex={`\\angle s_d=${n(r.faseIntegral)}^\\circ\\quad\\text{(polo do controlador na origem)}`}
-                      />
-                    )}
-                    <Formula
-                      latex={`${zeros}\\alpha\\equiv180^\\circ-\\theta_{GH}${integral ? "+\\angle s_d" : ""}\\pmod{360^\\circ},\\quad\\alpha=${n(r.alfa)}^\\circ`}
-                    />
+                    <MemoriaAngulo r={r} />
                   </section>
                   <section>
                     <h3>3. Calcular o zero real e o ganho</h3>
                     <Formula
                       latex={`z=\\frac{\\operatorname{Im}s_d}{\\tan\\alpha}-\\operatorname{Re}s_d=\\frac{${n(r.sd.im)}}{\\tan(${n(r.alfa)}^\\circ)}-(${n(r.sd.re)})=${n(r.z)}`}
                     />
-                    <Formula
-                      latex={`s_z=${n(-r.z)}${zeros === 2 ? "\\quad\\text{(zero duplo)}" : ""},\\quad|s_d+z|=${n(distancia)},\\quad|GH(s_d)|=${n(r.moduloGH)}`}
-                    />
-                    <Formula
-                      latex={`K_c=\\frac{${integral ? "|s_d|" : "1"}}{|s_d+z|${zeros === 2 ? "^2" : ""}\\,|GH(s_d)|}=\\frac{${integral ? n(Math.hypot(r.sd.re, r.sd.im)) : "1"}}{${n(distancia)}^{${zeros}}\\cdot${n(r.moduloGH)}}=${n(r.Kc)}`}
-                    />
+                    <MemoriaModulo r={r} />
                   </section>
                 </>
               )}
@@ -282,7 +256,11 @@ export default function RelatorioImpressao({
               </section>
               <section>
                 <h3>5. Fechar a malha e verificar os polos</h3>
-                <Formula latex="T(s)=\\frac{Y(s)}{R(s)}=\\frac{G_c(s)G(s)}{1+G_c(s)G(s)H(s)}" />
+                <Formula
+                  latex={
+                    "T(s)=\\frac{Y(s)}{R(s)}=\\frac{G_c(s)G(s)}{1+G_c(s)G(s)H(s)}"
+                  }
+                />
                 <div className="tf-impressa">
                   <Formula
                     latex={`T(s)=${resolucao.id === "q3" ? "\\frac{5(7s+24)(s+1)(s+4)}{(s+3)(s^2+8s+32)}" : tf(normalizada)}`}
@@ -432,23 +410,7 @@ function DiscretizacaoImpressa({
       {p && (
         <>
           <section>
-            <h3>8. Equação de diferenças e causalidade</h3>
-            <p>
-              e[k] é a entrada da função selecionada e u[k] é a saída. Dividindo
-              a função em z pela maior potência do denominador e voltando ao
-              domínio das amostras:
-            </p>
-            <div className="equacao-discreta-impressa">
-              <Formula latex={equacaoDiferencas(p.resultado, true)} />
-            </div>
-            <p>
-              {p.resultado.causal
-                ? "A equação é causal, sem amostras futuras da entrada."
-                : `A equação exige ${p.resultado.avanco} amostra(s) futura(s) da entrada e não é causal.`}
-            </p>
-          </section>
-          <section>
-            <h3>9. Verificar os polos discretos</h3>
+            <h3>8. Verificar os polos discretos</h3>
             <p>
               Polos da função selecionada:{" "}
               {p.polos.length
